@@ -10,9 +10,10 @@ from keras.layers import Resizing
 from keras.losses import MeanAbsoluteError, MeanSquaredError
 from keras.metrics import Accuracy
 
-from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold, train_test_split
+from sklearn.model_selection import RandomizedSearchCV, KFold, train_test_split
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.impute import KNNImputer
 
 import itertools
 
@@ -25,6 +26,8 @@ import numpy as np
 from dataclasses import dataclass
 
 from image_processing.aio_set_reader import PlantImageContainer
+
+import copy
 
 
 @dataclass
@@ -50,11 +53,13 @@ class KerasSKLearnComboModel:
 
     def grad(self, loss_func_: keras.losses.Loss, inputs_: np.ndarray, targets_: np.ndarray):
         with tf.GradientTape() as tape:
-            features = self.feature_model.predict(inputs_)
+            features = self.feature_model(inputs_, training=True)
+            self.regression_model.fit(features, targets_)
             predicts = self.regression_model.predict(features)
-            loss_value_1 = loss_func_(y_pred=predicts[0], y_true=targets_[0])
-            loss_value_2 = loss_func_(y_pred=predicts[0], y_true=targets_[0])
-        return tape.gradient([loss_value_1, loss_value_2], self.feature_model.trainable_variables)
+            loss_value_1 = loss_func_(y_pred=predicts[:, 0], y_true=targets_[:, 0])
+            loss_value_2 = loss_func_(y_pred=predicts[:, 1], y_true=targets_[:, 1])
+        # return tape.gradient([loss_value_1, loss_value_2], self.feature_model.trainable_variables)
+        return tape.gradient(loss_value_1, loss_value_2, self.feature_model.trainable_variables)
 
     def build_features_model(self, hp: dict) -> None:
         """
@@ -165,7 +170,7 @@ class KerasSKLearnComboModel:
         self.build_regression_model(hps_reg)
         self.build_features_model(hps_cnn)
 
-        skf = StratifiedKFold(n_splits=2)
+        skf = KFold(n_splits=10)
         optimizer = keras.optimizers.SGD(learning_rate=0.01)
         for epoch in range(self.n_epochs):
             epoch_loss_mae_1, epoch_loss_mae_2 = MeanAbsoluteError(), MeanAbsoluteError()
@@ -173,12 +178,12 @@ class KerasSKLearnComboModel:
             epoch_accuracy_1, epoch_accuracy_2 = Accuracy(), Accuracy()
 
             # Training loop - using batches of 32
-            for i, (train_idx, valid_idx) in skf.split(self.data, self.labels):
+            for i, (train_idx, valid_idx) in enumerate(skf.split(self.train_data, self.train_labels)):
                 train_data, train_labels = self.train_data[train_idx], self.train_labels[train_idx]
                 valid_data, valid_labels = self.train_data[valid_idx], self.train_labels[valid_idx]
 
                 # Optimize the model
-                grads = self.grad(epoch_accuracy_1, train_data, train_labels)
+                grads = self.grad(epoch_accuracy_1, valid_data, valid_labels)
                 optimizer.apply_gradients(zip(grads, self.feature_model.trainable_variables))
                 train_features = self.feature_model.predict(train_data)
 
@@ -312,17 +317,18 @@ cnn_hps = {'first_conv2d_out_channels': [32, 64],
 
 # гиперпараметры модели регрессии по фичам
 reg_hp = {'n_estimators': [5, 20, 50, 100],
-          'max_features': ['auto', 'sqrt'],
+          'max_features': ['log2', 'sqrt'],
           'max_depth': [(i + 1) * 5 for i in range(7)],
           'min_samples_split': [2, 6, 10],
           'bootstrap': [True, False],
           # "n_outputs_": [2]
           }
 
+
 # загрузка регрессионных меток
 wheat_data = pd.read_csv("../datasets/wheat/wheat_pheno_num_sync.csv")
 wheat_data = wheat_data.drop(["Unnamed: 0", "number"], axis=1)
-labels = wheat_data["Урожайность.зерна..г."]
+labels = wheat_data[["Урожайность.зерна..г.", "Высота.растений..см"]]
 
 # загрузка изображений
 images_path = "../AIO_set_wheat/for_model"
@@ -337,7 +343,10 @@ images_train, images_val, labels_train, labels_val = train_test_split(images,
 train_dataset = tf.data.Dataset.from_tensor_slices((images_train, labels_train.values))
 val_dataset = tf.data.Dataset.from_tensor_slices((images_val, labels_val.values))
 
-
+# (Пока просто средними значениями) импутируем данные, поскольку присутствуют пропуски
+# imp = SimpleImputer(missing_values=np.nan, strategy='mean')
+imp = KNNImputer(n_neighbors=2, weights='uniform')
+labels = imp.fit_transform(labels.to_numpy().reshape(-1, 2))
 combo_model = KerasSKLearnComboModel(data=images,
                                      labels=labels)
 ComboModelTuner.random_hyper_tuning(combo_model, 20, cnn_hps, reg_hp)
