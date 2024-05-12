@@ -25,7 +25,7 @@ class PlantImageContainer:
 
         images = []
         for filename in os.listdir(folder):
-            img = cv.imread(os.path.join(folder, filename))
+            img = cv.imread(os.path.join(folder, filename), cv.IMREAD_GRAYSCALE)
             if img is not None:
                 images.append(np.asarray(img).astype(np.float32))
         return np.asarray(images)
