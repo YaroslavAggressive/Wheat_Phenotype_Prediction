@@ -22,8 +22,8 @@ plt.xlabel("Номер образца")
 plt.ylabel("Урожайность.зерна..г.")
 plt.title("Распределение урожайности зерна среди исследованных образцов")
 plt.grid()
-plt.show()
 plt.savefig("crop_yeild_wheat.jpg")
+plt.show()
 plt.cla()
 
 # высота растений
@@ -33,8 +33,8 @@ plt.xlabel("Номер образца")
 plt.ylabel("Высота.растений..см")
 plt.title("Распределение среди исследованных образцов")
 plt.grid()
-plt.show()
 plt.savefig("height_wheat.jpg")
+plt.show()
 plt.cla()
 
 
