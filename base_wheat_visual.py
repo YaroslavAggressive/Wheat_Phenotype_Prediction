@@ -22,7 +22,7 @@ plt.xlabel("Номер образца")
 plt.ylabel("Урожайность зерна (г)")
 plt.title("Показатель урожайности зерна исследованных образцов")
 plt.grid()
-plt.savefig("crop_yeild_wheat.jpg")
+plt.savefig("crop_yield_wheat.jpg")
 plt.show()
 plt.cla()
 
