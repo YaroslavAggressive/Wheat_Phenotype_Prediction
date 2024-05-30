@@ -8,6 +8,5 @@ def rank_based_transform(x, k=0.5):
     return np.log(ranks / (1 - ranks))
 
 
-def data_standardization(arr: pd.Series) -> np.ndarray:
-    arr_np = arr.to_numpy()
-    return (arr_np - arr.mean()) / arr.std()
+def data_standardization(arr: np.ndarray) -> np.ndarray:
+    return (arr - arr.mean()) / arr.std()
