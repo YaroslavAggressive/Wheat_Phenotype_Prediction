@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 from support.phenotype_normalization import rank_based_transform, data_standardization
 
-# загрузка исходных данныъ
+# загрузка исходных данных
 name_1 = "datasets/wheat/markers_poly_filtered_sync.csv"
 name_2 = "datasets/wheat/wheat_pheno_num_sync.csv"
 
