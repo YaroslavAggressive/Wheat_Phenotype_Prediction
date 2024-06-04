@@ -24,7 +24,7 @@ plt.xlabel("Номер образца")
 plt.ylabel("Урожайность зерна (г)")
 plt.title("Показатель урожайности зерна исследованных образцов")
 plt.grid()
-plt.savefig("crop_yield_wheat.jpg")
+plt.savefig("plots/crop_yield_wheat.jpg")
 # plt.show()
 plt.cla()
 
@@ -35,19 +35,42 @@ plt.xlabel("Номер образца")
 plt.ylabel("Высота растений (см)")
 plt.title("Высота исследованных образцов пшеницы")
 plt.grid()
-plt.savefig("height_wheat.jpg")
+plt.savefig("plots/height_wheat.jpg")
 # plt.show()
 plt.cla()
 
+# бурая ржавчина
+brown_rust = df_2["Бурая.ржавчина..."]
+plt.plot(list(range(brown_rust.shape[0])), list(brown_rust), '.')
+plt.xlabel("Номер образца")
+plt.ylabel("Бурая ржавчина")
+plt.title("Показатели бурой ржавчины у исследованных образцов пшеницы")
+plt.grid()
+plt.savefig("plots/brown_rust_wheat.jpg")
+plt.show()
+plt.cla()
+
+# желтая ржавчина
+yellow_rust = df_2["Желтая.ржавчина..."]
+plt.plot(list(range(yellow_rust.shape[0])), list(yellow_rust), '.')
+plt.xlabel("Номер образца")
+plt.ylabel("Желтая ржавчина")
+plt.title("Показатели желтой ржавчины у исследованных образцов пшеницы")
+plt.grid()
+plt.savefig("plots/yellow_rust_wheat.jpg")
+plt.show()
+plt.cla()
+
 # еще попробуем отфильтровать nan-ы
-no_nan_df = df_2[df_2["Урожайность.зерна..г."].notnull() & df_2["Высота.растений..см"].notnull()]
-crop_yield_filtered = no_nan_df["Урожайность.зерна..г."]
-height_filtered = no_nan_df["Высота.растений..см"]
+crop_yield_filtered = df_2[df_2["Урожайность.зерна..г."].notnull()]["Урожайность.зерна..г."]
+height_filtered = df_2[df_2["Высота.растений..см"].notnull()]["Высота.растений..см"]
+brown_rust_filtered = df_2[df_2["Бурая.ржавчина..."].notnull()]["Бурая.ржавчина..."]
+yellow_rust_filtered = df_2[df_2["Желтая.ржавчина..."].notnull()]["Желтая.ржавчина..."]
 
 # распределение показателей урожайности
 plt.hist(list(crop_yield_filtered), bins='auto', color='#0504aa', alpha=0.7, rwidth=0.85)
-plt.xlabel("Номер образца")
-plt.ylabel("Частоты показателей урожайности (г)")
+plt.xlabel("Урожайность (г)")
+plt.ylabel("Частоты показателей")
 plt.title("Распределение фильтрованных частот урожайности зерна с образцов пшеницы")
 plt.grid()
 plt.savefig("plots/height_wheat_hist.jpg")
@@ -56,12 +79,32 @@ plt.cla()
 
 # распределение частот урожайности
 plt.hist(list(height_filtered))
-plt.xlabel("Номер образца")
-plt.ylabel("Частота высот растений (см)")
+plt.xlabel("Высота растений (см)")
+plt.ylabel("Частота показателей")
 plt.title("Распределение фильтрованных высот образцов пшеницы")
 plt.grid()
 plt.savefig("plots/crop_yield_wheat_hist.jpg")
 # plt.show()
+plt.cla()
+
+# распределение показателей бурой ржавчины
+plt.hist(list(brown_rust_filtered))
+plt.xlabel("Бурая ржавчина")
+plt.ylabel("Частота показателей")
+plt.title("Распределение показателей бурой ржавчины у исследованных образцов пшеницы")
+plt.grid()
+plt.savefig("plots/brown_rust_wheat_hist.jpg")
+plt.show()
+plt.cla()
+
+# распределение показателей желтой ржавчины
+plt.hist(list(yellow_rust_filtered), bins='auto', color='#0504aa', alpha=0.7, rwidth=0.85)
+plt.xlabel("Желтая ржавчина")
+plt.ylabel("Частота показателей")
+plt.title("Распределение показателей желтой ржавчины у исследованных образцов пшеницы")
+plt.grid()
+plt.savefig("plots/yellow_rust_wheat_hist.jpg")
+plt.show()
 plt.cla()
 
 # далее визуализируем данные с учетом нормализации
@@ -69,8 +112,8 @@ plt.cla()
 # первый метод нормализации ('фенотип' минус 'среднее' делить на 'дисперсию')
 # распределение частот высот
 plt.hist(list(data_standardization(crop_yield)), bins='auto', color='#0504aa', alpha=0.7, rwidth=0.85)
-plt.xlabel("Номер образца")
-plt.ylabel("Частоты нормализованных показателей урожайности (г)")
+plt.xlabel("Урожайность (г)")
+plt.ylabel("Частоты нормализованных показателей")
 plt.title("Распределение нормализованных стандартно частот урожайности зерна с образцов пшеницы")
 plt.grid()
 plt.savefig("plots/filter_stand_norm_height_wheat_hist.jpg")
@@ -79,11 +122,31 @@ plt.cla()
 
 # распределение частот урожайности
 plt.hist(list(data_standardization(height)))
-plt.xlabel("Номер образца")
-plt.ylabel("Частота нормализованных высот растений (см)")
+plt.xlabel("Высота растений (см)")
+plt.ylabel("Частота нормализованных показателей")
 plt.title("Распределение нормализованных стандартно высот образцов пшеницы")
 plt.grid()
 plt.savefig("plots/filter_stand_norm_crop_yield_wheat_hist.jpg")
+# plt.show()
+plt.cla()
+
+# распределение частот бурой ржавчины
+plt.hist(list(data_standardization(brown_rust_filtered)), bins='auto', color='#0504aa', alpha=0.7, rwidth=0.85)
+plt.xlabel("Бурая ржавчина")
+plt.ylabel("Частоты нормализованных показателей")
+plt.title("Распределение нормализованных стандартно частот показателей бурой ржавчины")
+plt.grid()
+plt.savefig("plots/filter_stand_norm_brown_rust_wheat_hist.jpg")
+# plt.show()
+plt.cla()
+
+# распределение частот желтой ржавчины
+plt.hist(list(data_standardization(yellow_rust_filtered)))
+plt.xlabel("Желтая ржавчина")
+plt.ylabel("Частота нормализованных показателей")
+plt.title("Распределение нормализованных стандартно частот показателей желтой ржавчины")
+plt.grid()
+plt.savefig("plots/filter_stand_norm_yellow_rust_wheat_hist.jpg")
 # plt.show()
 plt.cla()
 
@@ -92,8 +155,8 @@ plt.cla()
 
 # распределение частот высот
 plt.hist(list(rank_based_transform(crop_yield_filtered)), bins='auto', color='#0504aa', alpha=0.7, rwidth=0.85)
-plt.xlabel("Номер образца")
-plt.ylabel("Частоты нормализованных показателей урожайности (г)")
+plt.xlabel("Урожайность (г)")
+plt.ylabel("Частоты нормализованных показателей")
 plt.title("Распределение нормализованных логистически частот урожайности зерна с образцов пшеницы")
 plt.grid()
 plt.savefig("plots/filter_log_norm_height_wheat_hist.jpg")
@@ -102,11 +165,31 @@ plt.cla()
 
 # распределение частот урожайности
 plt.hist(list(rank_based_transform(height_filtered)))
-plt.xlabel("Номер образца")
-plt.ylabel("Частота нормализованных высот растений (см)")
+plt.xlabel("Высота растений (см)")
+plt.ylabel("Частота нормализованных показателей")
 plt.title("Распределение нормализованных логистически высот образцов пшеницы")
 plt.grid()
 plt.savefig("plots/filter_log_norm_crop_yield_wheat_hist.jpg")
+# plt.show()
+plt.cla()
+
+# распределение частот бурой ржавчины
+plt.hist(list(rank_based_transform(brown_rust_filtered)), bins='auto', color='#0504aa', alpha=0.7, rwidth=0.85)
+plt.xlabel("Бурая ржавчина")
+plt.ylabel("Частоты нормализованных показателей")
+plt.title("Распределение нормализованных логистически частот бурой ржавчины образцов пшеницы")
+plt.grid()
+plt.savefig("plots/filter_log_norm_brown_rust_wheat_hist.jpg")
+# plt.show()
+plt.cla()
+
+# распределение частот желтой ржавчина
+plt.hist(list(rank_based_transform(yellow_rust_filtered)))
+plt.xlabel("Желтая ржавчина")
+plt.ylabel("Частота нормализованных показателей")
+plt.title("Распределение нормализованных логистически частот желтой ржавчины образцов пшеницы")
+plt.grid()
+plt.savefig("plots/filter_log_norm_yellow_rust_wheat_hist.jpg")
 # plt.show()
 plt.cla()
 
