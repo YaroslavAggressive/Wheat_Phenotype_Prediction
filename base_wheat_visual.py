@@ -5,7 +5,7 @@ from support.phenotype_normalization import rank_based_transform, data_standardi
 
 
 def draw_hist(data: list, fig_width: int, fig_height: int, col_type: str, xlabel_name: str, ylabel_name: str,
-                         title_name: str, save_path: str, show: bool = False):
+              title_name: str, save_path: str, show: bool = False):
     plt.figure(figsize=(fig_width, fig_height))
     plt.hist(data, bins='auto', color=col_type, alpha=0.7, rwidth=0.85)
     plt.xlabel(xlabel_name)
@@ -170,6 +170,20 @@ def draw_standard_hists(df: pd.DataFrame):
               save_path="plots/filter_log_norm_yellow_rust_wheat_hist.jpg")
 
 
+def plot_corr(df: pd.DataFrame, title: str, show: bool = False):
+    f = plt.figure(figsize=(10, 6))
+    plt.matshow(df.corr(), fignum=f.number)
+    plt.xticks(range(df.select_dtypes(['number']).shape[1]), df.select_dtypes(['number']).columns,
+               fontsize=7, rotation=45)
+    plt.yticks(range(df.select_dtypes(['number']).shape[1]), df.select_dtypes(['number']).columns,
+               fontsize=7)
+    cb = plt.colorbar()
+    cb.ax.tick_params(labelsize=10)
+    plt.title(title, fontsize=12)
+    if show:
+        plt.show()
+
+
 # загрузка исходных данных
 name_1 = "datasets/wheat/markers_poly_filtered_sync.csv"
 name_2 = "datasets/wheat/wheat_pheno_num_sync.csv"
@@ -180,8 +194,22 @@ df_2 = pd.read_csv(name_2)
 # print(df_2.columns)
 
 # вся отрисовка
-draw_base_data_visual(df_2)
-draw_base_hists(df_2)
-draw_standard_hists(df_2)
+# draw_base_data_visual(df_2)
+# draw_base_hists(df_2)
+# draw_standard_hists(df_2)
 
+# корреляционная матрица 4 использованных фенотипов и в целом
 
+# 1. В целом
+# df_2.drop(["Unnamed: 0"])
+plot_corr(df_2, 'Корреляционная матрица фенотипических показателей пшеницы', True)
+exit(0)
+
+# 2. Только 'Высота растений', 'Урожайность', 'Бурая ржавчина' и 'Желтая ржавчина'
+df_my_pheno = df_2[["Урожайность.зерна..г.", "Высота.растений..см", "Бурая.ржавчина...", "Желтая.ржавчина..."]]
+plot_corr(df_2, 'Корреляционная матрица 4 выбранных фенотипических показателей', True)
+
+# графики доли пропусков по снипам и по фенотипам
+# 1. ОНП (генетические маркеры)
+
+# 2. Фенотипы
