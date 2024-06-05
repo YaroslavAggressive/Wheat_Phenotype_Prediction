@@ -94,6 +94,7 @@ def draw_train_valid_error(error_train: list, error_valid: list, metric_name: st
     plt.xlabel("Fold Number")
     plt.ylabel(metric_name)
     plt.title(title)
+    plt.legend()
     plt.grid()
     if savename:
         plt.savefig(savename)
