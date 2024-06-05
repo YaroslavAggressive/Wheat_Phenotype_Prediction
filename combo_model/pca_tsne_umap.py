@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
-import umap
+# import umap
 
 
 def pca_features(data: np.ndarray, n_components: int = 10) -> np.ndarray:
