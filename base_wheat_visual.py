@@ -170,11 +170,12 @@ def draw_standard_hists(df: pd.DataFrame):
               save_path="plots/filter_log_norm_yellow_rust_wheat_hist.jpg")
 
 
-def plot_corr(df: pd.DataFrame, title: str, show: bool = False):
+def plot_corr(df: pd.DataFrame, title: str, show: bool = False, save_path: str = ""):
     f = plt.figure(figsize=(10, 6))
-    plt.matshow(df.corr(), fignum=f.number)
+    print(df.corr())
+    plt.matshow(df.corr(method='pearson'), fignum=f.number)
     plt.xticks(range(df.select_dtypes(['number']).shape[1]), df.select_dtypes(['number']).columns,
-               fontsize=7, rotation=45)
+               fontsize=7, rotation=90)
     plt.yticks(range(df.select_dtypes(['number']).shape[1]), df.select_dtypes(['number']).columns,
                fontsize=7)
     cb = plt.colorbar()
@@ -182,6 +183,26 @@ def plot_corr(df: pd.DataFrame, title: str, show: bool = False):
     plt.title(title, fontsize=12)
     if show:
         plt.show()
+    if save_path:
+        plt.savefig(save_path)
+
+
+def draw_bars(df: pd.DataFrame, fig_width: int, fig_height: int, xlabel_name: str, ylabel_name: str,
+              title_name: str, save_path: str, split: int = 30, show: bool = False):
+    tmp_df = (df.isna().sum() * 100.0 / len(df)).sort_values(ascending=False)[:split]
+    plt.figure(figsize=(fig_width, fig_height))
+    plt.bar(list(tmp_df.index), list(tmp_df), color='maroon')
+    plt.xticks(range(df[list(tmp_df.index)].select_dtypes(['number']).shape[1]),
+               df[list(tmp_df.index)].select_dtypes(['number']).columns,
+               fontsize=7, rotation=30)
+    plt.xlabel(xlabel_name)
+    plt.ylabel(ylabel_name)
+    plt.title(title_name)
+    plt.grid()
+    plt.savefig(save_path)
+    if show:
+        plt.show()
+    plt.cla()
 
 
 # загрузка исходных данных
@@ -200,16 +221,20 @@ df_2 = pd.read_csv(name_2)
 
 # корреляционная матрица 4 использованных фенотипов и в целом
 
-# 1. В целом
-# df_2.drop(["Unnamed: 0"])
-plot_corr(df_2, 'Корреляционная матрица фенотипических показателей пшеницы', True)
-exit(0)
+# 1. По всем фенотипам
+df_2 = df_2.drop(["Unnamed: 0", "number", "name", "section"], axis=1)
+df_1 = df_1.drop(["Unnamed: 0"], axis=1)
+plot_corr(df_2, 'Корреляционная матрица фенотипических показателей пшеницы', False, "plots/corr_all_phenotypes.jpg")
 
 # 2. Только 'Высота растений', 'Урожайность', 'Бурая ржавчина' и 'Желтая ржавчина'
 df_my_pheno = df_2[["Урожайность.зерна..г.", "Высота.растений..см", "Бурая.ржавчина...", "Желтая.ржавчина..."]]
-plot_corr(df_2, 'Корреляционная матрица 4 выбранных фенотипических показателей', True)
+plot_corr(df_my_pheno, 'Корреляционная матрица 4 выбранных фенотипических показателей', False, "plots/corr_4_phenotypes.jpg")
 
 # графики доли пропусков по снипам и по фенотипам
 # 1. ОНП (генетические маркеры)
+draw_bars(df_1, 10, 6, "Генетические маркеры", "Процент пропусков (%)",
+          "Процент отсутствующих данных по каждому SNP", "plots/nans_snps.jpg")
 
 # 2. Фенотипы
+draw_bars(df_my_pheno, 10, 6, "Фенотипические показатели", "Процент пропусков (%)",
+          "Процент отсутствующих данных по фенотипам", "plots/nans_pheno.jpg")
