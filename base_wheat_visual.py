@@ -1,13 +1,13 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-
+import seaborn as sns
 from support.phenotype_normalization import rank_based_transform, data_standardization
 
 
 def draw_hist(data: list, fig_width: int, fig_height: int, col_type: str, xlabel_name: str, ylabel_name: str,
-              title_name: str, save_path: str, show: bool = False):
+              title_name: str, save_path: str, show: bool = False, bins: int = 20):
     plt.figure(figsize=(fig_width, fig_height))
-    plt.hist(data, bins='auto', color=col_type, alpha=0.7, rwidth=0.85)
+    plt.hist(data, bins=bins, color=col_type, alpha=0.7, rwidth=0.85)
     plt.xlabel(xlabel_name)
     plt.ylabel(ylabel_name)
     plt.title(title_name)
@@ -79,25 +79,29 @@ def draw_base_hists(df: pd.DataFrame):
     draw_hist(data=list(crop_yield_filtered), fig_width=10, fig_height=6, col_type='r', xlabel_name="Урожайность (г)",
               ylabel_name="Частоты показателей",
               title_name="Распределение фильтрованных частот урожайности зерна с образцов пшеницы",
-              save_path="plots/crop_yield_wheat_hist.jpg")
+              save_path="plots/crop_yield_wheat_hist.jpg",
+              bins=7)
 
     # распределение частот урожайности
     draw_hist(data=list(height_filtered), fig_width=10, fig_height=6, col_type='g', xlabel_name="Высота растений (см)",
               ylabel_name="Частоты показателей",
               title_name="Распределение фильтрованных высот образцов пшеницы",
-              save_path="plots/height_wheat_hist.jpg")
+              save_path="plots/height_wheat_hist.jpg",
+              bins=7)
 
     # распределение показателей бурой ржавчины
     draw_hist(data=list(brown_rust_filtered), fig_width=10, fig_height=6, col_type='b', xlabel_name="Бурая ржавчина",
               ylabel_name="Частоты показателей",
               title_name="Распределение показателей бурой ржавчины у исследованных образцов пшеницы",
-              save_path="plots/brown_rust_wheat_hist.jpg")
+              save_path="plots/brown_rust_wheat_hist.jpg",
+              bins=5)
 
     # распределение показателей желтой ржавчины
     draw_hist(data=list(yellow_rust_filtered), fig_width=10, fig_height=6, col_type='k', xlabel_name="Желтая ржавчина",
               ylabel_name="Частоты показателей",
               title_name="Распределение показателей желтой ржавчины у исследованных образцов пшеницы",
-              save_path="plots/yellow_rust_wheat_hist.jpg")
+              save_path="plots/yellow_rust_wheat_hist.jpg",
+              bins=7)
 
 
 def draw_standard_hists(df: pd.DataFrame):
@@ -146,40 +150,41 @@ def draw_standard_hists(df: pd.DataFrame):
               xlabel_name="Урожайность (г)",
               ylabel_name="Частоты нормализованных показателей",
               title_name="Распределение нормализованных логистически частот урожайности зерна с образцов пшеницы",
-              save_path="plots/filter_log_norm_crop_yield_wheat_hist.jpg")
+              save_path="plots/filter_log_norm_crop_yield_wheat_hist.jpg",
+              bins=7)
 
     # распределение частот урожайности
     draw_hist(data=list(rank_based_transform(height_filtered)), fig_width=10, fig_height=6, col_type='g',
               xlabel_name="Высота растений (см)",
               ylabel_name="Частоты нормализованных показателей",
               title_name="Распределение нормализованных логистически высот образцов пшеницы",
-              save_path="plots/filter_log_norm_height_wheat_hist.jpg")
+              save_path="plots/filter_log_norm_height_wheat_hist.jpg",
+              bins=7)
 
     # распределение частот бурой ржавчины
     draw_hist(data=list(rank_based_transform(brown_rust_filtered)), fig_width=10, fig_height=6, col_type='b',
               xlabel_name="Бурая ржавчина",
               ylabel_name="Частоты нормализованных показателей",
               title_name="Распределение нормализованных логистически частот бурой ржавчины образцов пшеницы",
-              save_path="plots/filter_log_norm_brown_rust_wheat_hist.jpg")
+              save_path="plots/filter_log_norm_brown_rust_wheat_hist.jpg",
+              bins=7)
 
     # распределение частот желтой ржавчина
     draw_hist(data=list(rank_based_transform(yellow_rust_filtered)), fig_width=10, fig_height=6, col_type='k',
               xlabel_name="Желтая ржавчина",
               ylabel_name="Частоты нормализованных показателей",
               title_name="Распределение нормализованных логистически частот желтой ржавчины образцов пшеницы",
-              save_path="plots/filter_log_norm_yellow_rust_wheat_hist.jpg")
+              save_path="plots/filter_log_norm_yellow_rust_wheat_hist.jpg",
+              bins=7)
 
 
 def plot_corr(df: pd.DataFrame, title: str, show: bool = False, save_path: str = ""):
     f = plt.figure(figsize=(10, 6))
-    print(df.corr())
-    plt.matshow(df.corr(method='pearson'), fignum=f.number)
+    sns.heatmap(df.corr(), annot=True)
     plt.xticks(range(df.select_dtypes(['number']).shape[1]), df.select_dtypes(['number']).columns,
-               fontsize=7, rotation=90)
+               fontsize=7, rotation=30)
     plt.yticks(range(df.select_dtypes(['number']).shape[1]), df.select_dtypes(['number']).columns,
                fontsize=7)
-    cb = plt.colorbar()
-    cb.ax.tick_params(labelsize=10)
     plt.title(title, fontsize=12)
     if show:
         plt.show()
@@ -215,9 +220,9 @@ df_2 = pd.read_csv(name_2)
 # print(df_2.columns)
 
 # вся отрисовка
-# draw_base_data_visual(df_2)
-# draw_base_hists(df_2)
-# draw_standard_hists(df_2)
+draw_base_data_visual(df_2)
+draw_base_hists(df_2)
+draw_standard_hists(df_2)
 
 # корреляционная матрица 4 использованных фенотипов и в целом
 
