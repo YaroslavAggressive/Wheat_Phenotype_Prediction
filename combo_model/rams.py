@@ -17,13 +17,48 @@ import pandas as pd
 import numpy as np
 
 from image_processing.aio_set_reader import PlantImageContainer
-
+from collections import Counter
 import multiprocessing
 import copy
 
 # need for gradients evaluation in GradCAM
 tf.compat.v1.disable_eager_execution()
 # tf.compat.v1.enable_eager_execution()
+
+
+def get_top_features(plant_df: pd.DataFrame, model_estimation_pictures: np.asarray, n_top: int, alpha: float) -> list:
+    """
+    Функция получения наиболее "важных" для предсказания модели генетических (и не только)
+    маркеров на основании показателей интенсивности соответствующих пикселей.
+
+    :param model_estimation_pictures: список всех изображений, полученных на основе AIO в качестве метрик оценки
+    качества модели
+    :param n_top: количество наиболее важных признаков, которое мы выделяем из каждого образца
+    :param alpha: процент, которые отбираем уже среди лучших выбранных маркеров на основании частоты встречаемости
+    :return: список из трех списков: 1 - список всех уникальных столбцов, которые попали в
+    топ хоть в одном из рассматриваемых изображений; 2 - топ 'alpha'% параметров, которые встречаются
+    """
+
+    meaningful_features = []
+    for img in model_estimation_pictures:
+        pixel_dict = {(s, k): img[s, k] for k in range(img.shape[1]) for s in range(img.shape[0])}
+        sorted_pixel_dict = dict(sorted(pixel_dict.items(), key=lambda item: item[1], reverse=True))  # по убыванию
+        meaningful_features += [(s, k) for s, k in list(sorted_pixel_dict.keys())[:n_top]]
+
+    aio_shape = model_estimation_pictures[0].shape
+    # получаем названия признаков по их координатам (общие по всем классам)
+    meaningful_col_names = []
+    for i, j in meaningful_features:
+        col_name = plant_df.columns[(i * aio_shape[1] + j) % (plant_df.shape[1])]
+        meaningful_col_names.append(col_name)
+
+    # оставим отдельно только уникальные
+    meaningful_col_names_uniq = set(meaningful_col_names)
+
+    # посмотрим на топ alpha%, которые встречаются в наибольшем числе классов
+    columns_frequency = sorted(Counter(meaningful_col_names).items(), key=lambda item: item[1], reverse=True)
+    alpha_quantile = [i for i, j in columns_frequency[: int(len(meaningful_col_names) * alpha)]]
+    return [meaningful_col_names_uniq, alpha_quantile]
 
 
 def grad_ram(model: Model, layer_name: str, image: np.array) -> np.array:
@@ -208,23 +243,30 @@ def score_ram_combo(model: Model, layer_name: str, dict_features: np.array, imag
 from pca_tsne_umap import pca_features, t_sne_features
 from no_df_model import ComboModelTuner
 
-loaded_model = tf.keras.models.load_model("checkpoints/grid_cv_trained_model_iter0.h5",
-                                          custom_objects={'custom_loss_mae': ComboModelTuner.custom_loss_mse},
+model_crop_height = "checkpoints/model_checkpoints/model_saves/height_crop/grid_cv_trained_model_iter4.h5"
+model_crop_brown = "checkpoints/model_checkpoints/model_saves/crop_brown/grid_cv_trained_model_iter4.h5"
+model_crop_yellow = "checkpoints/model_checkpoints/model_saves/crop_yellow/crop_yellow4/grid_cv_trained_model_iter4.h5"
+
+model_height = tf.keras.models.load_model(model_crop_height,
+                                          custom_objects={'custom_loss_mae': ComboModelTuner.custom_loss_mae},
                                           compile=False)
-loaded_model.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=0.0001),
-                            loss=ComboModelTuner.custom_loss_mae,
-                            metrics=[ComboModelTuner.custom_loss_mse])
-print(loaded_model.summary())
-# model_combo = load_model("logs/model_name_v3_x_0_trainable_model3.h5",
-#                          custom_objects={"custom_loss_simple": custom_loss_simple,
-#                                          "custom_loss_simple_2": custom_loss_simple_2,
-#                                          "custom_loss_last": custom_loss_last,
-#                                          "custom_loss_last_2": custom_loss_last_2})
-# # print(model_combo.summary())
-#
-# # убираем ненужные слои ввода и вывода
-# model_processed = Model(inputs=model_combo.inputs[1:], outputs=model_combo.outputs[1])
-# print(model_processed.summary())
+model_brown = tf.keras.models.load_model(model_crop_brown,
+                                         custom_objects={'custom_loss_mae': ComboModelTuner.custom_loss_mae},
+                                         compile=False)
+model_yellow = tf.keras.models.load_model(model_crop_yellow,
+                                          custom_objects={'custom_loss_mae': ComboModelTuner.custom_loss_mae},
+                                          compile=False)
+model_height.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=0.0001),
+                     loss=ComboModelTuner.custom_loss_mae,
+                     metrics=[ComboModelTuner.custom_loss_mse])
+
+model_brown.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=0.0001),
+                    loss=ComboModelTuner.custom_loss_mae,
+                    metrics=[ComboModelTuner.custom_loss_mse])
+
+model_height.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=0.0001),
+                     loss=ComboModelTuner.custom_loss_mae,
+                     metrics=[ComboModelTuner.custom_loss_mse])
 
 # загружаем дни и изображения, по дням строим метки классов для датасета
 folder_images = "../AIO_set_wheat/for_model"
@@ -233,21 +275,97 @@ pca_features_ = pca_features(images, n_components=5)  # По совету КН �
 tsne = t_sne_features(images, n_components=2)  # по совету КН взять 2
 total_features = np.concatenate((pca_features_, tsne), axis=1)
 df_wheat = pd.read_csv("../datasets/wheat/wheat_pheno_num_sync.csv")
-labels = df_wheat[["Урожайность.зерна..г.", "Высота.растений..см"]].to_numpy()
+df_gen = pd.read_csv("../datasets/wheat/markers_poly_filtered_sync.csv")
 
+# урожайность высота
+# labels = df_wheat[["Урожайность.зерна..г.", "Высота.растений..см"]].to_numpy()[:500]
+# data_images = images / 255.0
+# data_vector = labels
+# processed_images = []
+# tf.compat.v1.disable_eager_execution()
+# print(model_height.summary())
+# for i in range(len(images)):
+#     batch_maps = grad_ram_combo(model_height, "conv_deconv_1", total_features[i], images[i])
+#     processed_images += list([batch_maps])
+#     print(f"GradRAM {i} for crop height finished")
+# # tf.compat.v1.enable_eager_execution()
+# metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 10, 0.01)
+# print("Top features for GradRAM metric, model crop height")
+# print(top_metric_features)
 
+# урожайность бурая ржавчина
+# labels = df_wheat[["Урожайность.зерна..г.", "Бурая.ржавчина..."]].to_numpy()
+# data_images = images / 255.0
+# data_vector = labels
+# processed_images = []
+# # tf.compat.v1.disable_eager_execution()
+# for i in range(len(images)):
+#     batch_maps = grad_ram_combo(model_brown, "conv_deconv_1", total_features[i], images[i])
+#     processed_images += list([batch_maps])
+#     print(f"GradRAM {i} for crop brown rust finished")
+# # tf.compat.v1.enable_eager_execution()
+# metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 10, 0.01)
+# print("Top features for GradrAM metric, model crop brown rust")
+# print(top_metric_features)
+#
+# # урожайность желтая ржавчина
+# labels = df_wheat[["Урожайность.зерна..г.", "Желтая.ржавчина..."]].to_numpy()
+# data_images = images / 255.0
+# data_vector = labels
+# processed_images = []
+# # tf.compat.v1.disable_eager_execution()
+# for i in range(len(images)):
+#     batch_maps = grad_ram_combo(model_yellow, "conv_deconv_1", total_features[i], images[i])
+#     processed_images += list([batch_maps])
+#     print(f"GradRAM {i} for crop yellow rust finished")
+# # tf.compat.v1.enable_eager_execution()
+# metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 10, 0.01)
+# print("Top features for GradRAM metric, model crop yellow rust")
+# print(top_metric_features)
+
+# дальше посчитаем те же таблицы, но при помощи ScoreRAM
+# урожайность высота
+labels = df_wheat[["Урожайность.зерна..г.", "Высота.растений..см"]].to_numpy()[:500]
 data_images = images / 255.0
 data_vector = labels
+processed_images = []
+tf.compat.v1.disable_eager_execution()
+print(model_height.summary())
+for i in range(len(images)):
+    batch_maps = score_ram_combo(model_height, "conv_deconv_1", total_features[i], images[i])
+    processed_images += list([batch_maps])
+    print(f"ScoreRAM {i} for crop height finished")
+# tf.compat.v1.enable_eager_execution()
+metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 10, 0.01)
+print("Top features for ScoreRAM metric, model crop height")
+print(top_metric_features)
 
-# gradram_combo = grad_ram_combo(loaded_model, "max_pool_map", total_features[20], data_images[20])
-gradram_combo = score_ram_combo(loaded_model, "max_pool_map", total_features[0], data_images[0])
-plt.imshow(gradram_combo)
-plt.imsave('gradram_combo.jpg', gradram_combo)
+# урожайность бурая ржавчина
+labels = df_wheat[["Урожайность.зерна..г.", "Бурая.ржавчина..."]].to_numpy()
+data_images = images / 255.0
+data_vector = labels
+processed_images = []
+# tf.compat.v1.disable_eager_execution()
+for i in range(len(images)):
+    batch_maps = score_ram_combo(model_brown, "conv_deconv_1", total_features[i], images[i])
+    processed_images += list([batch_maps])
+    print(f"ScoreRAM {i} for crop brown rust finished")
+# tf.compat.v1.enable_eager_execution()
+metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 10, 0.01)
+print("Top features for ScoreRAM metric, model crop brown rust")
+print(top_metric_features)
 
-# gradram_pp_combo = grad_ram_pp_combo(model_processed, "max_pool_map", aio_dict.to_numpy()[0], data_images[0])
-# plt.imshow(gradram_pp_combo)
-# plt.imsave('gradram_pp_combo.jpg', gradram_pp_combo)
-
-# scoreram_combo = score_ram_combo(model_processed, "max_pool_map", aio_dict.to_numpy()[0], data_images[0])
-# plt.imshow(scoreram_combo)
-# plt.imsave('scoreram_combo.jpg', scoreram_combo)
+# урожайность желтая ржавчина
+labels = df_wheat[["Урожайность.зерна..г.", "Желтая.ржавчина..."]].to_numpy()
+data_images = images / 255.0
+data_vector = labels
+processed_images = []
+# tf.compat.v1.disable_eager_execution()
+for i in range(len(images)):
+    batch_maps = score_ram_combo(model_yellow, "conv_deconv_1", total_features[i], images[i])
+    processed_images += list([batch_maps])
+    print(f"ScoreRAM {i} for crop yellow rust finished")
+# tf.compat.v1.enable_eager_execution()
+metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 10, 0.01)
+print("Top features for ScoreRAM metric, model crop yellow rust")
+print(top_metric_features)
