@@ -31,5 +31,5 @@ if __name__ == "__main__":
     modified_meteo_df_wheat = dp.delete_redundant_columns(meteo_df_wheat, ["year", "doy", "geo_id"])
     meteo_names_wheat = modified_meteo_df_wheat.columns
     snp_colnames_wheat, weather_colnames_wheat = imcr.snp_weather_colnames(total_df_wheat.columns, meteo_names_wheat)
-    images = imcr.create_image_dataset(total_df_wheat, 128, 128, snp_colnames_wheat, weather_colnames_wheat,
+    images = imcr.create_image_dataset(total_df_wheat, 200, 200, snp_colnames_wheat, weather_colnames_wheat,
                                        args.path_model_AIO_wheat, args.path_control_AIO_wheat, multithread=False)

@@ -26,7 +26,10 @@ tf.compat.v1.disable_eager_execution()
 # tf.compat.v1.enable_eager_execution()
 
 
-def get_top_features(plant_df: pd.DataFrame, model_estimation_pictures: np.asarray, n_top: int, alpha: float) -> list:
+def get_top_features(plant_df: pd.DataFrame, model_estimation_pictures: np.asarray, n_top: int, alpha: float,
+                     draw: bool = False,
+                     color: str = "", title_: str = "", x_label: str = "", y_label: str = "",
+                     save_name: str = "") -> list:
     """
     Функция получения наиболее "важных" для предсказания модели генетических (и не только)
     маркеров на основании показателей интенсивности соответствующих пикселей.
@@ -55,6 +58,23 @@ def get_top_features(plant_df: pd.DataFrame, model_estimation_pictures: np.asarr
     # оставим отдельно только уникальные
     meaningful_col_names_uniq = set(meaningful_col_names)
 
+    # отрисовка
+    if draw:
+        dct = Counter(meaningful_col_names)
+        for elem in dct.most_common():
+            print(elem)
+        keys = [i + 1 for i, elem in enumerate(dct.most_common())]
+        values = [elem[1] for elem in dct.most_common()]
+        plt.bar(keys, values)
+        plt.axvline(x=int(0.05 * len(values)), color="r", linestyle="--")
+        # plt.hist(keys, values, color=color)
+        # plt.gca().set_xlim(min(Counter(meaningful_col_names).values()), max(Counter(meaningful_col_names).values()))
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
+        plt.title(title_)
+        plt.grid()
+        plt.savefig(save_name)
+        plt.cla()
     # посмотрим на топ alpha%, которые встречаются в наибольшем числе классов
     columns_frequency = sorted(Counter(meaningful_col_names).items(), key=lambda item: item[1], reverse=True)
     alpha_quantile = [i for i, j in columns_frequency[: int(len(meaningful_col_names) * alpha)]]
@@ -269,32 +289,55 @@ model_height.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=0.0001),
                      metrics=[ComboModelTuner.custom_loss_mse])
 
 # загружаем дни и изображения, по дням строим метки классов для датасета
+n = 960
 folder_images = "../AIO_set_wheat/for_model"
-images = PlantImageContainer.load_images_from_folder(folder_images)
+images = PlantImageContainer.load_images_from_folder(folder_images)[:n]
 pca_features_ = pca_features(images, n_components=5)  # По совету КН взять 5
 tsne = t_sne_features(images, n_components=2)  # по совету КН взять 2
+
+# plt.scatter(pca_features_[:, 1], pca_features_[:, 4], label='points')
+# plt.xlabel("PC1")
+# plt.ylabel("PC2")
+# plt.title("PCA")
+# plt.grid()
+# plt.show()
+# plt.cla()
+#
+# plt.scatter(tsne[:, 0], tsne[:, 1], label='points')
+# plt.xlabel("PC1")
+# plt.ylabel("PC2")
+# plt.title("t-SNE")
+# plt.grid()
+# plt.show()
+
 total_features = np.concatenate((pca_features_, tsne), axis=1)
+
 df_wheat = pd.read_csv("../datasets/wheat/wheat_pheno_num_sync.csv")
 df_gen = pd.read_csv("../datasets/wheat/markers_poly_filtered_sync.csv")
 
 # урожайность высота
-# labels = df_wheat[["Урожайность.зерна..г.", "Высота.растений..см"]].to_numpy()[:500]
-# data_images = images / 255.0
-# data_vector = labels
-# processed_images = []
-# tf.compat.v1.disable_eager_execution()
-# print(model_height.summary())
-# for i in range(len(images)):
-#     batch_maps = grad_ram_combo(model_height, "conv_deconv_1", total_features[i], images[i])
-#     processed_images += list([batch_maps])
-#     print(f"GradRAM {i} for crop height finished")
-# # tf.compat.v1.enable_eager_execution()
-# metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 10, 0.01)
-# print("Top features for GradRAM metric, model crop height")
-# print(top_metric_features)
-
+labels = df_wheat[["Урожайность.зерна..г.", "Высота.растений..см"]].to_numpy()[:n]
+data_images = images / 255.0
+data_vector = labels
+processed_images = []
+tf.compat.v1.disable_eager_execution()
+print(model_height.summary())
+for i in range(len(images)):
+    batch_maps = grad_ram_combo(model_height, "conv_deconv_1", total_features[i], images[i])
+    processed_images += list([batch_maps])
+    plt.imsave('gradram_combo.jpg', batch_maps)
+    processed_images += list([batch_maps])
+    print(f"GradRAM {i} for crop height finished")
+# tf.compat.v1.enable_eager_execution()
+metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 30, 0.01,
+                                                               draw=True, color="r", title_="",
+                                                               x_label="Номер SNP", y_label="Частота",
+                                                               save_name="../plots/feature_hist_crop_height_grad.png")
+print("Top features for GradRAM metric, model crop height")
+print(top_metric_features)
+exit(0)
 # урожайность бурая ржавчина
-# labels = df_wheat[["Урожайность.зерна..г.", "Бурая.ржавчина..."]].to_numpy()
+# labels = df_wheat[["Урожайность.зерна..г.", "Бурая.ржавчина..."]].to_numpy()[:n]
 # data_images = images / 255.0
 # data_vector = labels
 # processed_images = []
@@ -304,12 +347,15 @@ df_gen = pd.read_csv("../datasets/wheat/markers_poly_filtered_sync.csv")
 #     processed_images += list([batch_maps])
 #     print(f"GradRAM {i} for crop brown rust finished")
 # # tf.compat.v1.enable_eager_execution()
-# metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 10, 0.01)
+# metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 30, 0.01,
+#                                                                draw=True, color="r", title_="",
+#                                                                x_label="Название SNP", y_label="Частота",
+#                                                                save_name="../plots/feature_hist_crop_brown_grad.png")
 # print("Top features for GradrAM metric, model crop brown rust")
 # print(top_metric_features)
 #
 # # урожайность желтая ржавчина
-# labels = df_wheat[["Урожайность.зерна..г.", "Желтая.ржавчина..."]].to_numpy()
+# labels = df_wheat[["Урожайность.зерна..г.", "Желтая.ржавчина..."]].to_numpy()[:n]
 # data_images = images / 255.0
 # data_vector = labels
 # processed_images = []
@@ -319,13 +365,16 @@ df_gen = pd.read_csv("../datasets/wheat/markers_poly_filtered_sync.csv")
 #     processed_images += list([batch_maps])
 #     print(f"GradRAM {i} for crop yellow rust finished")
 # # tf.compat.v1.enable_eager_execution()
-# metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 10, 0.01)
+# metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 30, 0.01,
+#                                                                draw=True, color="r", title_="",
+#                                                                x_label="Название SNP", y_label="Частота",
+#                                                                save_name="../plots/feature_hist_crop_yellow_grad.png")
 # print("Top features for GradRAM metric, model crop yellow rust")
 # print(top_metric_features)
 
 # дальше посчитаем те же таблицы, но при помощи ScoreRAM
 # урожайность высота
-labels = df_wheat[["Урожайность.зерна..г.", "Высота.растений..см"]].to_numpy()[:500]
+labels = df_wheat[["Урожайность.зерна..г.", "Высота.растений..см"]].to_numpy()[n]
 data_images = images / 255.0
 data_vector = labels
 processed_images = []
@@ -333,15 +382,20 @@ tf.compat.v1.disable_eager_execution()
 print(model_height.summary())
 for i in range(len(images)):
     batch_maps = score_ram_combo(model_height, "conv_deconv_1", total_features[i], images[i])
+    plt.imshow(batch_maps)
+    plt.imsave('scoreram_combo.jpg', batch_maps)
     processed_images += list([batch_maps])
     print(f"ScoreRAM {i} for crop height finished")
 # tf.compat.v1.enable_eager_execution()
-metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 10, 0.01)
+metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 30, 0.01,
+                                                               draw=True, color="r", title_="",
+                                                               x_label="Название SNP", y_label="Частота",
+                                                               save_name="../plots/feature_hist_crop_height_score.png")
 print("Top features for ScoreRAM metric, model crop height")
 print(top_metric_features)
 
 # урожайность бурая ржавчина
-labels = df_wheat[["Урожайность.зерна..г.", "Бурая.ржавчина..."]].to_numpy()
+labels = df_wheat[["Урожайность.зерна..г.", "Бурая.ржавчина..."]].to_numpy()[:n]
 data_images = images / 255.0
 data_vector = labels
 processed_images = []
@@ -351,12 +405,15 @@ for i in range(len(images)):
     processed_images += list([batch_maps])
     print(f"ScoreRAM {i} for crop brown rust finished")
 # tf.compat.v1.enable_eager_execution()
-metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 10, 0.01)
+metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 30, 0.01,
+                                                               draw=True, color="r", title_="",
+                                                               x_label="Название SNP", y_label="Частота",
+                                                               save_name="../plots/feature_hist_crop_brown_score.png")
 print("Top features for ScoreRAM metric, model crop brown rust")
 print(top_metric_features)
 
 # урожайность желтая ржавчина
-labels = df_wheat[["Урожайность.зерна..г.", "Желтая.ржавчина..."]].to_numpy()
+labels = df_wheat[["Урожайность.зерна..г.", "Желтая.ржавчина..."]].to_numpy()[:n]
 data_images = images / 255.0
 data_vector = labels
 processed_images = []
@@ -366,6 +423,9 @@ for i in range(len(images)):
     processed_images += list([batch_maps])
     print(f"ScoreRAM {i} for crop yellow rust finished")
 # tf.compat.v1.enable_eager_execution()
-metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 10, 0.01)
+metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 30, 0.01,
+                                                               draw=True, color="r", title_="",
+                                                               x_label="Название SNP", y_label="Частота",
+                                                               save_name="../plots/feature_hist_crop_yellow_score.png")
 print("Top features for ScoreRAM metric, model crop yellow rust")
 print(top_metric_features)

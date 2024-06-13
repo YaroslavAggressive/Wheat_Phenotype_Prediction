@@ -9,4 +9,5 @@ def rank_based_transform(x, k=0.5):
 
 
 def data_standardization(arr: np.ndarray) -> np.ndarray:
+    arr = arr[~np.isnan(arr)]
     return (arr - arr.mean()) / arr.std()

@@ -24,7 +24,7 @@ y_val = np.random.randint(0, 10, (1000, 1))
 
 
 @dataclass
-class ComboModel(keras_tuner.HyperModel):
+class ComboModel:
 
     n_epochs: int = 100
     n_row: int = 200
@@ -136,7 +136,8 @@ class ComboModel(keras_tuner.HyperModel):
                                                     bootstrap_training_dataset=hp['bootstrap'])
         forest_2_pred = reg_forest_2(concatenate_features)
 
-        combo_model = Model(inputs=[inp_node, inp_dict_model], outputs=[forest_1_pred, forest_2_pred], name="feature_model")
+        combo_model = Model(inputs=[inp_node, inp_dict_model], outputs=[forest_1_pred, forest_2_pred],
+                            name="feature_model")
 
         return combo_model
 
@@ -172,7 +173,7 @@ class ComboModel(keras_tuner.HyperModel):
         }
 
         # возвращаем собранную модель
-        return self.feature_model_functional(model_hp)
+        return self.combo_model_functional(model_hp)
 
     @staticmethod
     @tf.function
@@ -192,14 +193,13 @@ class ComboModel(keras_tuner.HyperModel):
 
         return result
 
-    # Function to run the train step.
     # здесь надо подумать как исправить эту функцию
     @tf.function
-    def run_train_step(self, images_, pop_comps_, labels_1_, labels_2_):
+    def run_train_step(self, images_, loss_fn: keras.losses.Loss, labels_1_: np.ndarray, labels_2_: np.ndarray):
         with tf.GradientTape() as tape:
             logits_1, logits_2 = self.model(images_, pop_comps_)
-            loss_1 = loss_fn(labels, logits_1)
-            loss_2 = loss_fn(labels, logits_2)
+            loss_1 = loss_fn(labels_1_, logits_1)
+            loss_2 = loss_fn(labels_2_, logits_2)
             # Add any regularization losses.
             if self.model.losses:
                 loss_1 += tf.math.add_n(self.model.losses)
@@ -210,7 +210,7 @@ class ComboModel(keras_tuner.HyperModel):
 
     # Function to run the validation step.
     @tf.function
-    def run_val_step(self, images_, pop_comps_, labels_1_, labels_2_):
+    def run_val_step(self, images_, pop_comps_, loss_fn: keras.losses.Loss, labels_1_, labels_2_):
         logits = self.model(images)
         loss = loss_fn(labels, logits)
         # Update the metric.

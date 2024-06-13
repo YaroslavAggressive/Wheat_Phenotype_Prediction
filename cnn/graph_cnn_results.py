@@ -125,6 +125,7 @@ add_dir = "/mae"
 tests_mae = draw_research_results(dir_ + metrics_dr + height_crop + add_dir)
 
 # plt.plot(list(range(len(tests_mae[0]))), tests_mae[0], color="r")
+plt.figure(figsize=(10, 6))
 plt.bar(list(range(len(tests_mae[0]))), tests_mae[0], color="red")
 plt.xlabel("Номер итерации подбора параметров")
 plt.ylabel("MAE")
@@ -138,6 +139,7 @@ add_dir = "/mae"
 tests_mae = draw_research_results(dir_ + metrics_dr + crop_brown_rust + add_dir)
 
 # plt.plot(list(range(len(tests_mae[0]))), tests_mae[0], color="r")
+plt.figure(figsize=(10, 6))
 plt.bar(list(range(len(tests_mae[0]))), tests_mae[0], color="green")
 plt.xlabel("Номер итерации подбора параметров")
 plt.ylabel("MAE")
@@ -150,6 +152,7 @@ plt.cla()
 tests_mae = draw_research_results(dir_ + metrics_dr + crop_yellow_rust)
 
 # plt.plot(list(range(len(tests_mae[0]))), tests_mae[0], color="r")
+plt.figure(figsize=(10, 6))
 plt.bar(list(range(len(tests_mae[0]))), tests_mae[0], color="blue")
 plt.xlabel("Номер итерации подбора параметров")
 plt.ylabel("MAE")

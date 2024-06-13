@@ -7,21 +7,6 @@ import argparse
 YEAR_DAYS = 365
 
 
-def delete_redundant_columns(df: pd.DataFrame, colnames: list) -> pd.DataFrame:
-    """
-    Удаление ненужных столбцов из датафрейма
-
-    :param df: исходный датафрейм
-    :param colnames: список колонок таблицы к удалению
-    :return: Измененный набор данных
-    """
-
-    for name in colnames:
-        if name in df.columns:
-            del df[name]
-    return df
-
-
 def create_complete_df(df_total: pd.DataFrame, df_meteo: pd.DataFrame, col_names: list,
                        days_before: int, days_after: int) -> pd.DataFrame:
     """
@@ -115,22 +100,22 @@ def vigna_to_table(df_genes: pd.DataFrame, df_meteo: pd.DataFrame, df_resp: pd.D
 
 # creating vigna dataset for
 
-# df_gen = pd.read_csv("../datasets/vigna/full_tab_gwas.csv")
-# df_meteo = pd.read_csv("../datasets/vigna/meteo_vigna.csv")
-# df_date = pd.read_csv("../datasets/vigna/pheno_tab_muc.csv")
-#
-# # df_gen_with_date = merge_columns_to_df(df_gen, df_date, ["year", "geo_id", "doy"])
-# # df_gen_with_date.to_csv("../tables_for_AIO/full_tab_gwas_with_date.csv", index=False)
-#
-# # creating total dataframe
-# df_gen = delete_redundant_columns(df_gen, ["resp"])
-# total_df = vigna_to_table(df_genes=df_gen, df_meteo=df_meteo, df_resp=df_date, days_before=5, days_after=20,
-#                           colnames=["T2M_MAX", "T2M_MIN", "PRECTOTCORR", "GWETTOP", "ALLSKY_SFC_LW_DWN", "dl"])
-# total_df.to_csv("../tables_for_AIO/total_df_for_aio_vigna.csv", index=False)
+df_gen = pd.read_csv("../datasets/vigna/full_tab_gwas.csv")
+df_meteo = pd.read_csv("../datasets/vigna/meteo_vigna.csv")
+df_date = pd.read_csv("../datasets/vigna/pheno_tab_muc.csv")
+
+# df_gen_with_date = merge_columns_to_df(df_gen, df_date, ["year", "geo_id", "doy"])
+# df_gen_with_date.to_csv("../tables_for_AIO/full_tab_gwas_with_date.csv", index=False)
+
+# creating total dataframe
+df_gen = df_gen.drop(["resp"])
+total_df = vigna_to_table(df_genes=df_gen, df_meteo=df_meteo, df_resp=df_date, days_before=5, days_after=20,
+                          colnames=["T2M_MAX", "T2M_MIN", "PRECTOTCORR", "GWETTOP", "ALLSKY_SFC_LW_DWN", "dl"])
+total_df.to_csv("../tables_for_AIO/total_df_for_aio_vigna.csv", index=False)
 
 # creating chickpea dataset
 # import allel
-#
+
 # ffl = allel.read_vcf("../datasets/chickpea/merged.005.085.recode.vcf.gz")
 #
 # gt = allel.GenotypeArray(ffl['calldata/GT'])
@@ -141,58 +126,58 @@ def vigna_to_table(df_genes: pd.DataFrame, df_meteo: pd.DataFrame, df_resp: pd.D
 # creating total tables for chickpea data
 
 # load and watch over the weather data tables for Kuban/Astrakhan
-# aos_2022_df = pd.read_csv("../datasets/chickpea/pogoda_aos_28_04_2022.csv")
-# print(aos_2022_df.shape)
+aos_2022_df = pd.read_csv("../datasets/chickpea/pogoda_aos_28_04_2022.csv")
+print(aos_2022_df.shape)
 
 # так как таблицы будем делать по годам, все имена файлов с погодой в один список впихнем
-# chickpea_df = pd.read_csv("../tables_for_AIO/total_df_for_aio_chickpea_28042016.csv")
-# for colname in chickpea_df.columns:
-#     print(f"column = {colname}, value = {chickpea_df[colname][0]}")
-# vigna_df = pd.read_csv("../tables_for_AIO/total_df_for_aio_vigna.csv")
-# for colname in vigna_df.columns:
-#     print(f"column = {colname}, value = {vigna_df[colname][0]}")
-# weather_filenames = ["pogoda_aos_28_04_2022.csv", "pogoda_kos_02_05_2017.csv", "pogoda_kos_18_05_2016.csv",
-#                      "pogoda_kos_28_04_2016.csv", "pogoda_kos_13_05_2022.csv"]
+chickpea_df = pd.read_csv("../tables_for_AIO/total_df_for_aio_chickpea_28042016.csv")
+for colname in chickpea_df.columns:
+    print(f"column = {colname}, value = {chickpea_df[colname][0]}")
+vigna_df = pd.read_csv("../tables_for_AIO/total_df_for_aio_vigna.csv")
+for colname in vigna_df.columns:
+    print(f"column = {colname}, value = {vigna_df[colname][0]}")
+weather_filenames = ["pogoda_aos_28_04_2022.csv", "pogoda_kos_02_05_2017.csv", "pogoda_kos_18_05_2016.csv",
+                     "pogoda_kos_28_04_2016.csv", "pogoda_kos_13_05_2022.csv"]
 
-# df_folder = "../datasets/chickpea/"
-# weather_filenames = ["pogoda_kos_28_04_2016.csv"]
-# genotype_filenames = ["chickpea_raw_df_col_row_names.csv"]
-# days_before = 5
-# days_after = 20
-#
-# for fl in weather_filenames:
-#     print(fl.split("_"))
-#
-# weather_parameters = ["ALLSKY_SFC_LW_DWN", "T2M_MAX", "T2M_MIN", "RH2M", "PRECTOTCORR"]
-#
-# for filename_meteo, filename_gen in zip(weather_filenames, genotype_filenames):
-#     # сначала обработаем погоду
-#     filepath = df_folder + filename_meteo
-#
-#     # создаем новый объект датасета, в котором переформатируем данные
-#     tmp_meteo_df = pd.read_csv(filepath, sep=";")
-#
-#     # поскольку pandas считает первую строку параметров столбцами фрейма данных, немного подшаманить приедтся
-#     first_row = pd.DataFrame([tmp_meteo_df.columns])
-#     tmp_meteo_df.columns = range(len(tmp_meteo_df.columns))
-#     tmp_meteo_df = pd.concat([first_row, tmp_meteo_df], axis=0)
-#
-#     # разворачиваем датафрейм в один ряд
-#     res_df = tmp_meteo_df.unstack().to_frame().T
-#     res_df.columns = [param + str(i + 1) for i in range(days_before + days_after) for param in weather_parameters]
-#
-#     # необходимо датафрейм согласовать с генетическим по колиечству записей и "склеить" по строкам
-#
-#     # скачаем датафрейм, к которому будем добавлят погоду
-#     tmp_geno_df = pd.read_csv(df_folder + filename_gen)
-#     n_rows = tmp_geno_df.shape[0]
-#
-#     # все образцы посажены в один день (вроде как, хотя тут не совсем уверен), поэтому "размножим" просто погоду
-#     res_df = res_df.loc[res_df.index.repeat(n_rows)].reset_index(drop=True)
-#     total_df = pd.concat([tmp_geno_df, res_df], axis=1)
-#
-#     # сохранение в файл для добавления длины светового дня
-#     total_df.to_csv("../tables_for_AIO/chickpea_geo_meteo_noDL_28042016.csv", index=False)
+df_folder = "../datasets/chickpea/"
+weather_filenames = ["pogoda_kos_28_04_2016.csv"]
+genotype_filenames = ["chickpea_raw_df_col_row_names.csv"]
+days_before = 5
+days_after = 20
+
+for fl in weather_filenames:
+    print(fl.split("_"))
+
+weather_parameters = ["ALLSKY_SFC_LW_DWN", "T2M_MAX", "T2M_MIN", "RH2M", "PRECTOTCORR"]
+
+for filename_meteo, filename_gen in zip(weather_filenames, genotype_filenames):
+    # сначала обработаем погоду
+    filepath = df_folder + filename_meteo
+
+    # создаем новый объект датасета, в котором переформатируем данные
+    tmp_meteo_df = pd.read_csv(filepath, sep=";")
+
+    # поскольку pandas считает первую строку параметров столбцами фрейма данных, немного подшаманить приедтся
+    first_row = pd.DataFrame([tmp_meteo_df.columns])
+    tmp_meteo_df.columns = range(len(tmp_meteo_df.columns))
+    tmp_meteo_df = pd.concat([first_row, tmp_meteo_df], axis=0)
+
+    # разворачиваем датафрейм в один ряд
+    res_df = tmp_meteo_df.unstack().to_frame().T
+    res_df.columns = [param + str(i + 1) for i in range(days_before + days_after) for param in weather_parameters]
+
+    # необходимо датафрейм согласовать с генетическим по колиечству записей и "склеить" по строкам
+
+    # скачаем датафрейм, к которому будем добавлят погоду
+    tmp_geno_df = pd.read_csv(df_folder + filename_gen)
+    n_rows = tmp_geno_df.shape[0]
+
+    # все образцы посажены в один день (вроде как, хотя тут не совсем уверен), поэтому "размножим" просто погоду
+    res_df = res_df.loc[res_df.index.repeat(n_rows)].reset_index(drop=True)
+    total_df = pd.concat([tmp_geno_df, res_df], axis=1)
+
+    # сохранение в файл для добавления длины светового дня
+    total_df.to_csv("../tables_for_AIO/chickpea_geo_meteo_noDL_28042016.csv", index=False)
 
 # здесь теперь перепишем порядок столбцов дата фрейма, чтобы сохранить порядок в создании AIO
 # df_chickpea_for_aio = pd.read_csv("../tables_for_AIO/total_df_for_aio_chickpea_28042016.csv")

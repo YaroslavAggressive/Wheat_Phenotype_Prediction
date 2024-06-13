@@ -179,13 +179,14 @@ def draw_standard_hists(df: pd.DataFrame):
 
 
 def plot_corr(df: pd.DataFrame, title: str, show: bool = False, save_path: str = ""):
-    f = plt.figure(figsize=(10, 6))
-    sns.heatmap(df.corr(), annot=True)
+    f = plt.figure(figsize=(20, 10))
+    mask = np.triu(np.ones_like(df_my_pheno.corr()))
+    dataplot = sns.heatmap(df_my_pheno.corr(), cmap="YlGnBu", annot=True, mask=mask, annot_kws={"fontsize": 32})
     plt.xticks(range(df.select_dtypes(['number']).shape[1]), df.select_dtypes(['number']).columns,
-               fontsize=7, rotation=30)
+               fontsize=12, rotation=15)
     plt.yticks(range(df.select_dtypes(['number']).shape[1]), df.select_dtypes(['number']).columns,
-               fontsize=7)
-    plt.title(title, fontsize=12)
+               fontsize=12, rotation=-15)
+    plt.title(title, fontsize=22)
     if show:
         plt.show()
     if save_path:
@@ -220,20 +221,25 @@ df_2 = pd.read_csv(name_2)
 # print(df_2.columns)
 
 # вся отрисовка
-draw_base_data_visual(df_2)
-draw_base_hists(df_2)
-draw_standard_hists(df_2)
+# draw_base_data_visual(df_2)
+# draw_base_hists(df_2)
+# draw_standard_hists(df_2)
 
 # корреляционная матрица 4 использованных фенотипов и в целом
 
 # 1. По всем фенотипам
 df_2 = df_2.drop(["Unnamed: 0", "number", "name", "section"], axis=1)
 df_1 = df_1.drop(["Unnamed: 0"], axis=1)
-plot_corr(df_2, 'Корреляционная матрица фенотипических показателей пшеницы', False, "plots/corr_all_phenotypes.jpg")
+# plot_corr(df_2, 'Корреляционная матрица фенотипических показателей пшеницы', False, "plots/corr_all_phenotypes.jpg")
+# plt.cla()
 
 # 2. Только 'Высота растений', 'Урожайность', 'Бурая ржавчина' и 'Желтая ржавчина'
+import numpy as np
 df_my_pheno = df_2[["Урожайность.зерна..г.", "Высота.растений..см", "Бурая.ржавчина...", "Желтая.ржавчина..."]]
+# mask = np.triu(np.ones_like(df_my_pheno.corr()))
+# dataplot = sns.heatmap(df_my_pheno.corr(), cmap="YlGnBu", annot=True, mask=mask, annot_kws={"fontsize": 16})
 plot_corr(df_my_pheno, 'Корреляционная матрица 4 выбранных фенотипических показателей', False, "plots/corr_4_phenotypes.jpg")
+exit(0)
 
 # графики доли пропусков по снипам и по фенотипам
 # 1. ОНП (генетические маркеры)

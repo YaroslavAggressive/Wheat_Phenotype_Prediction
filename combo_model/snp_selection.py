@@ -12,59 +12,59 @@ from support.phenotype_normalization import rank_based_transform, data_standardi
 
 # поиск пересечений снипов и сохранение в табличный мастаб latex
 # сначала GradRAM
-# crop_height_grad = ['NC_057803.1_4754622_C_T', 'NC_057797.1_534615859_A_G', 'NC_057798.1_604438876_A_G',
-#                     'NC_057796.1_10207963_A_G', 'NC_057794.1_149436352_G_C', 'NC_057796.1_10196988_G_T',
-#                     'NC_057794.1_39102905_T_C', 'NC_057797.1_531991977_A_G', 'NC_057800.1_732137392_A_G',
-#                     'NC_057796.1_10209215_G_T', 'NC_057795.1_382123600_C_T', 'NC_057795.1_594638876_C_T',
-#                     'NC_057798.1_722770323_T_A', 'NC_057798.1_757041516_A_G', 'NC_057795.1_383327892_A_G',
-#                     'NC_057803.1_4755814_A_G', 'NC_057801.1_677461618_C_G', 'NC_057799.1_19376950_C_T',
-#                     'NC_057801.1_834376177_G_T', 'NC_057797.1_739918017_G_A', 'NC_057799.1_75635911_G_C',
-#                     'NC_057799.1_75744012_G_C', 'NC_057797.1_537751215_T_G', 'NC_057799.1_43102981_G_A',
-#                     'NC_057795.1_600072180_G_A', 'NC_057798.1_430792946_T_A', 'NC_057798.1_429693834_T_C',
-#                     'NC_057795.1_10570763_C_G', 'NC_057796.1_28507212_A_G', 'NC_057797.1_739918057_A_G',
-#                     'NC_057801.1_367640535_C_A', 'NC_057797.1_776842743_A_G', 'NC_057795.1_383970956_G_A',
-#                     'NC_057797.1_725456771_T_C', 'NC_057794.1_245870738_T_C', 'NC_057796.1_22406463_G_C',
-#                     'NC_057798.1_142433913_C_T', 'NC_057795.1_594638836_T_G', 'NC_057794.1_59894735_C_T',
-#                     'NC_057797.1_29704897_T_G', 'NC_057795.1_636669724_A_C', 'NC_057798.1_7426102_C_T',
-#                     'NC_057795.1_599743536_C_T', 'NC_057795.1_599461234_T_C', 'NC_057802.1_563064506_G_C',
-#                     'NC_057794.1_46694769_C_T', 'NC_057800.1_732137368_T_C', 'NC_057800.1_10043422_A_T',
-#                     'NC_057801.1_165366658_A_G', 'NC_057798.1_752474511_A_G']
-#
-# crop_brown_grad = ['NC_057797.1_13234957_A_C', 'NC_057796.1_304241564_T_C', 'NC_057797.1_9171771_G_A',
-#                    'NC_057798.1_753176654_C_T', 'NC_057802.1_553182224_G_C', 'NC_057798.1_811195497_A_G',
-#                    'NC_057797.1_694523621_C_A', 'NC_057796.1_304241506_G_A', 'NC_057796.1_305900442_T_G',
-#                    'NC_057797.1_9158310_A_G', 'NC_057801.1_756450913_T_A', 'NC_057801.1_12477398_C_G',
-#                    'NC_057796.1_27639689_A_G', 'NC_057801.1_214091004_A_G', 'NC_057796.1_27639647_T_C',
-#                    'NC_057796.1_255085454_T_C', 'NC_057798.1_702328067_G_A', 'NC_057798.1_98236710_T_G',
-#                    'NC_057796.1_307965282_G_T', 'NC_057797.1_694697835_G_T', 'NC_057796.1_398837919_C_G',
-#                    'NC_057801.1_824083368_G_A', 'NC_057795.1_588246527_G_C', 'NC_057795.1_686682819_G_C',
-#                    'NC_057797.1_694698079_T_C', 'NC_057801.1_794615048_A_G', 'NC_057799.1_615951454_T_C',
-#                    'NC_057801.1_34427962_C_T', 'NC_057801.1_372328967_G_A', 'NC_057799.1_8321833_A_T',
-#                    'NC_057802.1_553182237_G_A', 'NC_057797.1_671555569_G_C', 'NC_057801.1_614024000_G_C',
-#                    'NC_057797.1_16787287_C_G', 'NC_057796.1_255085393_A_T', 'NC_057803.1_38700849_G_A',
-#                    'NC_057802.1_624104_A_G', 'NC_057801.1_217007657_A_C', 'NC_057801.1_83381054_A_T',
-#                    'NC_057795.1_589139981_T_C', 'NC_057800.1_8368421_G_A', 'NC_057802.1_413392816_G_A',
-#                    'NC_057797.1_730298253_C_A', 'NC_057801.1_250750415_T_C', 'NC_057796.1_412732720_T_C',
-#                    'NC_057795.1_686682777_C_T', 'NC_057796.1_307965317_G_C', 'NC_057794.1_485230890_C_T',
-#                    'NC_057798.1_98236735_G_A', 'NC_057801.1_419053524_G_A']
-#
-# crop_yellow_grad = ['NC_057798.1_608949069_T_C', 'NC_057794.1_65502599_G_T', 'NC_057801.1_620652034_C_T',
-#                     'NC_057798.1_609871637_A_G', 'NC_057799.1_608700361_G_A', 'NC_057796.1_295026318_C_T',
-#                     'NC_057796.1_297803003_C_T', 'NC_057798.1_541165534_T_C', 'NC_057795.1_600072180_G_A',
-#                     'NC_057796.1_295026324_C_G', 'NC_057802.1_413392110_C_T', 'NC_057801.1_620652074_G_A',
-#                     'NC_057796.1_232848824_T_C', 'NC_057801.1_12397731_T_C', 'NC_057801.1_17996663_G_A',
-#                     'NC_057802.1_382214610_G_A', 'NC_057794.1_61327479_T_C', 'NC_057801.1_82259596_T_G',
-#                     'NC_057798.1_736653096_G_A', 'NC_057799.1_75744012_G_C', 'NC_057801.1_12476113_G_A',
-#                     'NC_057798.1_752474363_G_A', 'NC_057794.1_48914576_T_A', 'NC_057795.1_71295734_T_C',
-#                     'NC_057795.1_71295653_C_T', 'NC_057795.1_670070685_G_A', 'NC_057799.1_2959129_G_A',
-#                     'NC_057795.1_51477020_A_C', 'NC_057801.1_164669803_A_G', 'NC_057798.1_540671709_G_A',
-#                     'NC_057798.1_735606871_C_T', 'NC_057794.1_57389185_C_T', 'NC_057802.1_382214449_G_A',
-#                     'NC_057799.1_615944126_G_T', 'NC_057796.1_50601227_C_T', 'NC_057801.1_82128337_A_G',
-#                     'NC_057798.1_674451531_A_G', 'NC_057796.1_146297383_C_T', 'NC_057798.1_736582333_A_G',
-#                     'NC_057795.1_191227009_T_C', 'NC_057799.1_48021727_C_T', 'NC_057797.1_786122359_C_T',
-#                     'NC_057797.1_5358333_G_A', 'NC_057795.1_599461234_T_C', 'NC_057801.1_822973489_A_G',
-#                     'NC_057799.1_557582543_G_T', 'NC_057794.1_41905540_A_G', 'NC_057799.1_635746095_T_G',
-#                     'NC_057801.1_165205171_A_C', 'NC_057797.1_759445639_T_C']
+crop_height_grad = ['NC_057803.1_4754622_C_T', 'NC_057797.1_534615859_A_G', 'NC_057798.1_604438876_A_G',
+                    'NC_057796.1_10207963_A_G', 'NC_057794.1_149436352_G_C', 'NC_057796.1_10196988_G_T',
+                    'NC_057794.1_39102905_T_C', 'NC_057797.1_531991977_A_G', 'NC_057800.1_732137392_A_G',
+                    'NC_057796.1_10209215_G_T', 'NC_057795.1_382123600_C_T', 'NC_057795.1_594638876_C_T',
+                    'NC_057798.1_722770323_T_A', 'NC_057798.1_757041516_A_G', 'NC_057795.1_383327892_A_G',
+                    'NC_057803.1_4755814_A_G', 'NC_057801.1_677461618_C_G', 'NC_057799.1_19376950_C_T',
+                    'NC_057801.1_834376177_G_T', 'NC_057797.1_739918017_G_A', 'NC_057799.1_75635911_G_C',
+                    'NC_057799.1_75744012_G_C', 'NC_057797.1_537751215_T_G', 'NC_057799.1_43102981_G_A',
+                    'NC_057795.1_600072180_G_A', 'NC_057798.1_430792946_T_A', 'NC_057798.1_429693834_T_C',
+                    'NC_057795.1_10570763_C_G', 'NC_057796.1_28507212_A_G', 'NC_057797.1_739918057_A_G',
+                    'NC_057801.1_367640535_C_A', 'NC_057797.1_776842743_A_G', 'NC_057795.1_383970956_G_A',
+                    'NC_057797.1_725456771_T_C', 'NC_057794.1_245870738_T_C', 'NC_057796.1_22406463_G_C',
+                    'NC_057798.1_142433913_C_T', 'NC_057795.1_594638836_T_G', 'NC_057794.1_59894735_C_T',
+                    'NC_057797.1_29704897_T_G', 'NC_057795.1_636669724_A_C', 'NC_057798.1_7426102_C_T',
+                    'NC_057795.1_599743536_C_T', 'NC_057795.1_599461234_T_C', 'NC_057802.1_563064506_G_C',
+                    'NC_057794.1_46694769_C_T', 'NC_057800.1_732137368_T_C', 'NC_057800.1_10043422_A_T',
+                    'NC_057801.1_165366658_A_G', 'NC_057798.1_752474511_A_G']
+
+crop_brown_grad = ['NC_057797.1_13234957_A_C', 'NC_057796.1_304241564_T_C', 'NC_057797.1_9171771_G_A',
+                   'NC_057798.1_753176654_C_T', 'NC_057802.1_553182224_G_C', 'NC_057798.1_811195497_A_G',
+                   'NC_057797.1_694523621_C_A', 'NC_057796.1_304241506_G_A', 'NC_057796.1_305900442_T_G',
+                   'NC_057797.1_9158310_A_G', 'NC_057801.1_756450913_T_A', 'NC_057801.1_12477398_C_G',
+                   'NC_057796.1_27639689_A_G', 'NC_057801.1_214091004_A_G', 'NC_057796.1_27639647_T_C',
+                   'NC_057796.1_255085454_T_C', 'NC_057798.1_702328067_G_A', 'NC_057798.1_98236710_T_G',
+                   'NC_057796.1_307965282_G_T', 'NC_057797.1_694697835_G_T', 'NC_057796.1_398837919_C_G',
+                   'NC_057801.1_824083368_G_A', 'NC_057795.1_588246527_G_C', 'NC_057795.1_686682819_G_C',
+                   'NC_057797.1_694698079_T_C', 'NC_057801.1_794615048_A_G', 'NC_057799.1_615951454_T_C',
+                   'NC_057801.1_34427962_C_T', 'NC_057801.1_372328967_G_A', 'NC_057799.1_8321833_A_T',
+                   'NC_057802.1_553182237_G_A', 'NC_057797.1_671555569_G_C', 'NC_057801.1_614024000_G_C',
+                   'NC_057797.1_16787287_C_G', 'NC_057796.1_255085393_A_T', 'NC_057803.1_38700849_G_A',
+                   'NC_057802.1_624104_A_G', 'NC_057801.1_217007657_A_C', 'NC_057801.1_83381054_A_T',
+                   'NC_057795.1_589139981_T_C', 'NC_057800.1_8368421_G_A', 'NC_057802.1_413392816_G_A',
+                   'NC_057797.1_730298253_C_A', 'NC_057801.1_250750415_T_C', 'NC_057796.1_412732720_T_C',
+                   'NC_057795.1_686682777_C_T', 'NC_057796.1_307965317_G_C', 'NC_057794.1_485230890_C_T',
+                   'NC_057798.1_98236735_G_A', 'NC_057801.1_419053524_G_A']
+
+crop_yellow_grad = ['NC_057798.1_608949069_T_C', 'NC_057794.1_65502599_G_T', 'NC_057801.1_620652034_C_T',
+                    'NC_057798.1_609871637_A_G', 'NC_057799.1_608700361_G_A', 'NC_057796.1_295026318_C_T',
+                    'NC_057796.1_297803003_C_T', 'NC_057798.1_541165534_T_C', 'NC_057795.1_600072180_G_A',
+                    'NC_057796.1_295026324_C_G', 'NC_057802.1_413392110_C_T', 'NC_057801.1_620652074_G_A',
+                    'NC_057796.1_232848824_T_C', 'NC_057801.1_12397731_T_C', 'NC_057801.1_17996663_G_A',
+                    'NC_057802.1_382214610_G_A', 'NC_057794.1_61327479_T_C', 'NC_057801.1_82259596_T_G',
+                    'NC_057798.1_736653096_G_A', 'NC_057799.1_75744012_G_C', 'NC_057801.1_12476113_G_A',
+                    'NC_057798.1_752474363_G_A', 'NC_057794.1_48914576_T_A', 'NC_057795.1_71295734_T_C',
+                    'NC_057795.1_71295653_C_T', 'NC_057795.1_670070685_G_A', 'NC_057799.1_2959129_G_A',
+                    'NC_057795.1_51477020_A_C', 'NC_057801.1_164669803_A_G', 'NC_057798.1_540671709_G_A',
+                    'NC_057798.1_735606871_C_T', 'NC_057794.1_57389185_C_T', 'NC_057802.1_382214449_G_A',
+                    'NC_057799.1_615944126_G_T', 'NC_057796.1_50601227_C_T', 'NC_057801.1_82128337_A_G',
+                    'NC_057798.1_674451531_A_G', 'NC_057796.1_146297383_C_T', 'NC_057798.1_736582333_A_G',
+                    'NC_057795.1_191227009_T_C', 'NC_057799.1_48021727_C_T', 'NC_057797.1_786122359_C_T',
+                    'NC_057797.1_5358333_G_A', 'NC_057795.1_599461234_T_C', 'NC_057801.1_822973489_A_G',
+                    'NC_057799.1_557582543_G_T', 'NC_057794.1_41905540_A_G', 'NC_057799.1_635746095_T_G',
+                    'NC_057801.1_165205171_A_C', 'NC_057797.1_759445639_T_C']
 
 # print(list(set(crop_yellow_grad) & set(crop_brown_grad)))
 # print(list(set(crop_height_grad) & set(crop_yellow_grad)))
@@ -182,10 +182,14 @@ crop_yellow_score = ['NC_057800.1_643183742_T_C', 'NC_057800.1_643183809_A_G', '
                      'NC_057798.1_727563492_T_C', 'NC_057799.1_634294230_A_G', 'NC_057800.1_34524792_G_A',
                      'NC_057798.1_749703100_C_A', 'NC_057802.1_995137_T_C', 'NC_057797.1_29759478_T_C',
                      'NC_057795.1_46040339_T_C', 'NC_057796.1_491183243_G_A', 'NC_057795.1_45310856_T_C']
-
 print(list(set(crop_yellow_score) & set(crop_brown_score)))
 print(list(set(crop_height_score) & set(crop_yellow_score)))
-print(list(set(crop_height_score) & set(crop_brown_score)))
+print(list(set(crop_brown_score) & set(crop_height_score)))
+
+print(list(set(crop_brown_grad) & set(crop_yellow_grad)))
+print(list(set(crop_brown_grad) & set(crop_height_grad)))
+print(list(set(crop_yellow_grad) & set(crop_height_grad)))
+exit(0)
 for i in range(0, 30):
     crop_yellow_score[i] = crop_yellow_score[i].replace("_", "\_")
     crop_brown_score[i] = crop_brown_score[i].replace("_", "\_")
@@ -200,10 +204,10 @@ print("#################")
 for i in range(0, 30, 3):
     print(f"${crop_yellow_score[i]}$ & ${crop_yellow_score[i + 1]}$ & ${crop_yellow_score[i + 2]}$ \\\ \hline")
 
-# brown_idx = pd.read_pickle("../combo_model/checkpoints/train_test_indices/indices/crop_brown/train_test_split.txt")
-# crop_idx = pd.read_pickle("../combo_model/checkpoints/train_test_indices/indices/height_crop/train_test_split.txt")
-# print(len(crop_idx))
-# print(len(brown_idx))
+brown_idx = pd.read_pickle("../combo_model/checkpoints/train_test_indices/indices/crop_brown/train_test_split.txt")
+crop_idx = pd.read_pickle("../combo_model/checkpoints/train_test_indices/indices/height_crop/train_test_split.txt")
+print(len(crop_idx))
+print(len(brown_idx))
 
 with open("../combo_model/checkpoints/train_test_indices/indices/crop_brown/train_test_split.txt", "rb") as fl:
     brown_idx = pickle.load(fl)
@@ -214,7 +218,7 @@ brown_idx = np.array(list(range(400)))[~brown_idx]
 
 model_crop_height = "../combo_model/checkpoints/model_checkpoints/rand_cv_trained_model_iter_0.h5"
 model_crop_brown = "../combo_model/checkpoints/model_checkpoints/model_saves/crop_brown/grid_cv_trained_model_iter0.h5"
-# model_crop_yellow = "../combo_model/checkpoints/model_checkpoints/model_saves/crop_yellow/crop_yellow4/grid_cv_trained_model_iter4.h5"
+model_crop_yellow = "../combo_model/checkpoints/model_checkpoints/model_saves/crop_yellow/crop_yellow4/grid_cv_trained_model_iter4.h5"
 
 model_height = tf.keras.models.load_model(model_crop_height,
                                           custom_objects={'custom_loss_mae': ComboModelTuner.custom_loss_mae},
@@ -244,48 +248,130 @@ pca_features_ = pca_features(images, n_components=5)  # По совету КН �
 tsne = t_sne_features(images, n_components=2)  # по совету КН взять 2
 total_features = np.concatenate((pca_features_, tsne), axis=1)
 df_wheat = pd.read_csv("../datasets/wheat/wheat_pheno_num_sync.csv")
-print(df_wheat.head(5))
 df_gen = pd.read_csv("../datasets/wheat/markers_poly_filtered_sync.csv")
 
-labels_height = df_wheat[["Высота.растений..см"]].to_numpy()
-labels_crop = df_wheat[["Урожайность.зерна..г."]].to_numpy()
-labels_brown = df_wheat[["Бурая.ржавчина..."]].to_numpy()
-labels_yellow = df_wheat[["Желтая.ржавчина..."]].to_numpy()
+df_height = df_wheat[["Высота.растений..см"]].dropna()
+df_crop = df_wheat[["Урожайность.зерна..г."]].dropna()
+df_brown = df_wheat[["Бурая.ржавчина..."]].dropna()
+df_yellow = df_wheat[["Желтая.ржавчина..."]].dropna()
 
+labels_height = df_height[["Высота.растений..см"]].to_numpy()
+labels_crop = df_crop[["Урожайность.зерна..г."]].to_numpy()
+labels_brown = df_brown[["Бурая.ржавчина..."]].to_numpy()
+labels_yellow = df_yellow[["Желтая.ржавчина..."]].to_numpy()
+
+print(np.mean(labels_height))
+print(np.mean(labels_crop))
+print(np.mean(labels_brown))
+print(np.mean(labels_yellow))
+exit(0)
 # нормализация данных
 labels_height = rank_based_transform(labels_height.flatten()[~np.isnan(labels_height.flatten())])
 labels_crop = rank_based_transform(labels_crop.flatten()[~np.isnan(labels_crop.flatten())])
 labels_brown = rank_based_transform(labels_brown.flatten()[~np.isnan(labels_brown.flatten())])
 labels_yellow = rank_based_transform(labels_yellow.flatten()[~np.isnan(labels_yellow.flatten())])
 
+import matplotlib.pyplot as plt
+
 # ошибка урожайность высота
+from scipy.stats import pearsonr
 pred_crop_height = model_height.predict([images, total_features])
-err_crop = np.abs(labels_crop.flatten() - pred_crop_height[labels_crop.index][:, 0].flatten())
-err_height = np.abs(labels_height.flatten() - pred_crop_height[labels_height.index][:, 1].flatten())
-print(err_crop.mean())
-print(err_height.mean())
-print("###########")
+
+err_crop_test = np.abs(labels_crop[~crop_idx].flatten() - pred_crop_height[~crop_idx][:, 0].flatten())
+err_height_test = np.abs(labels_height[~crop_idx].flatten() - pred_crop_height[~crop_idx][:, 1].flatten())
+err_crop_train = np.abs(labels_crop[crop_idx].flatten() - pred_crop_height[crop_idx][:, 0].flatten())
+err_height_train = np.abs(labels_height[crop_idx].flatten() - pred_crop_height[crop_idx][:, 1].flatten())
+
+print(err_crop_test.mean())
+print(err_height_test.mean())
+print(err_crop_train.mean())
+print(err_height_train.mean())
+# print(np.corrcoef(labels_crop[crop_idx].flatten(), pred_crop_height[crop_idx][:, 0].flatten(), rowvar=False))
+# print(np.corrcoef(labels_height[crop_idx].flatten(), pred_crop_height[crop_idx][:, 1].flatten(), rowvar=False))
+# print(pearsonr(labels_crop[crop_idx].flatten(), pred_crop_height[crop_idx][:, 0].flatten()))
+# print(pearsonr(labels_height[crop_idx].flatten(), pred_crop_height[crop_idx][:, 1].flatten()))
+
+
+# plt.plot([min(labels_crop.flatten()), max(labels_crop.flatten())], [min(labels_crop.flatten()), max(labels_crop.flatten())], "r")
+# plt.scatter(list(labels_crop.flatten()), list(pred_crop_height[df_crop.index][:, 0].flatten()))
+# plt.xlabel("True value")
+# plt.ylabel("Prediction")
+# plt.title("Сравнение ошибок прогнозирования с реальными показателями урожайности образцов")
+# plt.grid()
+# plt.savefig("../plots/error_crop_height_crop.jpg")
+# plt.cla()
+#
+# plt.plot([min(labels_height.flatten()), max(labels_height.flatten())], [min(labels_height.flatten()), max(labels_height.flatten())], "r")
+# plt.scatter(list(labels_height.flatten()), list(pred_crop_height[df_height.index][:, 1].flatten()))
+# plt.xlabel("True value")
+# plt.ylabel("Prediction")
+# plt.title("Сравнение ошибок прогнозирования с реальными показателями высоты растений")
+# plt.grid()
+# plt.savefig("../plots/error_crop_height_height.jpg")
+# plt.cla()
+# print("###########")
 
 # ошибка урожайность бурая ржавчина
 pred_crop_brown = model_brown.predict([images, total_features])
-err_crop = np.abs(labels_crop.flatten() - pred_crop_brown[labels_crop.index][:, 0].flatten())
-err_brown = np.abs(labels_brown.flatten() - pred_crop_brown[labels_brown.index][:, 1].flatten())
-print(err_crop.mean())
-print(err_brown.mean())
-print("###########")
+
+err_crop_test = np.abs(labels_crop[~brown_idx].flatten() - pred_crop_brown[~brown_idx][:, 0].flatten())
+err_brown_test = np.abs(labels_brown[~brown_idx].flatten() - pred_crop_brown[~brown_idx][:, 1].flatten())
+err_crop_train = np.abs(labels_crop[brown_idx].flatten() - pred_crop_brown[brown_idx][:, 0].flatten())
+err_brown_train = np.abs(labels_brown[brown_idx].flatten() - pred_crop_brown[brown_idx][:, 1].flatten())
+print(err_crop_test.mean())
+print(err_brown_test.mean())
+print(err_crop_train.mean())
+print(err_brown_train.mean())
+# print(np.corrcoef(labels_crop.flatten(), pred_crop_brown[df_crop.index][:, 0].flatten()))
+# print(np.corrcoef(labels_brown.flatten(), pred_crop_brown[df_brown.index][:, 1].flatten()))
+
+# plt.plot([min(labels_crop.flatten()), max(labels_crop.flatten())], [min(labels_crop.flatten()), max(labels_crop.flatten())], "r")
+# plt.scatter(list(labels_crop.flatten()), list(pred_crop_brown[df_crop.index][:, 0].flatten()))
+# plt.xlabel("True value")
+# plt.ylabel("Prediction")
+# plt.title("Сравнение ошибок прогнозирования с реальными показателями урожайности образцов")
+# plt.grid()
+# plt.savefig("../plots/error_crop_brown_crop.jpg")
+# plt.cla()
+#
+# plt.plot([min(labels_brown.flatten()), max(labels_brown.flatten())], [min(labels_brown.flatten()), max(labels_brown.flatten())], "r")
+# plt.scatter(list(labels_brown.flatten()), list(pred_crop_brown[df_brown.index][:, 1].flatten()))
+# plt.xlabel("True value")
+# plt.ylabel("Prediction")
+# plt.title("Сравнение ошибок прогнозирования с реальными показателями поражения бурой ржавчиной")
+# plt.grid()
+# plt.savefig("../plots/error_crop_brown_brown.jpg")
+# plt.cla()
+# print("###########")
 
 # ошибка урожайность желтая ржавчина
 pred_crop_yellow = model_yellow.predict([images, total_features])
-err_crop = np.abs(labels_crop.flatten() - pred_crop_yellow[labels_crop.index][:, 0].flatten())
-err_yellow = np.abs(labels_yellow.flatten() - pred_crop_yellow[labels_yellow.index][:, 1].flatten())
-print(err_crop.mean())
-print(err_yellow.mean())
+err_crop_test = np.abs(labels_crop[~crop_idx].flatten() - pred_crop_yellow[~crop_idx][:, 0].flatten())
+err_yellow_test = np.abs(labels_yellow[~crop_idx].flatten() - pred_crop_yellow[~crop_idx][:, 1].flatten())
+err_crop_train = np.abs(labels_crop[crop_idx].flatten() - pred_crop_yellow[crop_idx][:, 0].flatten())
+err_yellow_train = np.abs(labels_yellow[crop_idx].flatten() - pred_crop_yellow[crop_idx][:, 1].flatten())
+print(err_crop_test.mean())
+print(err_yellow_test.mean())
+print(err_crop_train.mean())
+print(err_yellow_train.mean())
+# print(np.corrcoef(labels_crop.flatten(), pred_crop_yellow[df_crop.index][:, 0].flatten()))
+# print(np.corrcoef(labels_yellow.flatten(), pred_crop_yellow[df_yellow.index][:, 1].flatten()))
 
-print(np.corrcoef(labels_crop.flatten(), pred_crop_height[labels_crop.index][:, 0].flatten()))
-print(np.corrcoef(labels_height.flatten(), pred_crop_height[labels_height.index][:, 1].flatten()))
-print(np.corrcoef(labels_crop.flatten(), pred_crop_brown[labels_crop.index][:, 0].flatten()))
-print(np.corrcoef(labels_brown.flatten(), pred_crop_brown[labels_brown.index][:, 1].flatten()))
-print(np.corrcoef(labels_crop.flatten(), pred_crop_yellow[labels_crop.index][:, 0].flatten()))
-print(np.corrcoef(labels_yellow.flatten(), pred_crop_yellow[labels_yellow.index][:, 1].flatten()))
+# plt.plot([min(labels_crop.flatten()), max(labels_crop.flatten())], [min(labels_crop.flatten()), max(labels_crop.flatten())], "r")
+# plt.scatter(list(labels_crop.flatten()), list(pred_crop_yellow[df_crop.index][:, 0].flatten()))
+# plt.xlabel("True value")
+# plt.ylabel("Prediction")
+# plt.title("Сравнение ошибок прогнозирования с реальными показателями урожайности образцов")
+# plt.grid()
+# plt.savefig("../plots/error_crop_yellow_crop.jpg")
+# plt.cla()
+#
+# plt.plot([min(labels_yellow.flatten()), max(labels_yellow.flatten())], [min(labels_yellow.flatten()), max(labels_yellow.flatten())], "r")
+# plt.scatter(list(labels_yellow.flatten()), list(pred_crop_yellow[df_yellow.index][:, 1].flatten()))
+# plt.xlabel("True value")
+# plt.ylabel("Prediction")
+# plt.title("Сравнение ошибок прогнозирования с реальными показателями поражения желтой ржавчиной")
+# plt.grid()
+# plt.savefig("../plots/error_crop_yellow_yellow.jpg")
 
 

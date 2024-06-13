@@ -6,6 +6,7 @@ import multiprocessing as mp
 
 THREADS_NUMBER = 20  # пока такое значение, чтобы машина не померла
 
+
 def weather_to_pixel(value: float) -> dict:
     """
     Принцип перевода погодных факторов в пиксели результирующего искусственного изображения по 3 цветовым каналам
@@ -195,4 +196,4 @@ print("DF#2")
 df_2 = pd.read_csv("../datasets/wheat/markers_poly_filtered_sync.csv")
 df_2 = df_2.drop(["Unnamed: 0"], axis=1)
 
-create_image_dataset(df_2, 128, 128, df_2.columns, [], "../AIO_set_wheat/for_model", "../AIO_set_wheat/for_user")
+create_image_dataset(df_2, 200, 200, df_2.columns, [], "../AIO_set_wheat/for_model", "../AIO_set_wheat/for_user")
