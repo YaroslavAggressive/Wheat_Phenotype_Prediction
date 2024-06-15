@@ -21,6 +21,11 @@ from collections import Counter
 import multiprocessing
 import copy
 
+from pca_tsne_umap import pca_features, t_sne_features
+from no_df_model import ComboModelTuner
+
+from typing import Callable
+
 # need for gradients evaluation in GradCAM
 tf.compat.v1.disable_eager_execution()
 # tf.compat.v1.enable_eager_execution()
@@ -260,8 +265,51 @@ def score_ram_combo(model: Model, layer_name: str, dict_features: np.array, imag
     return ram
 
 
-from pca_tsne_umap import pca_features, t_sne_features
-from no_df_model import ComboModelTuner
+def process_model_rams(model_for_rams: tf.keras.Model, df_for_images: pd.DataFrame, ram_metric: Callable,
+                       images_: np.array, features_: np.array, layer_name: str, top_snp_per_image: int = 40,
+                       top_snp_overall: float = 0.01, draw_stat: bool = False, color_bar: str = "", title_: str = "",
+                       xlabel_: str = "", ylabel_: str = "", save_: bool = False, save_name: str = "") -> list:
+
+    """
+    Функция выделения карт важности определенной RAM-метрикой (Regression Activation Map) моделью сверточной нейросети
+
+    :param model_for_rams: сама модель
+    :param ram_metric: метрика построения карт важности
+    :param images_: набор изображений, на которых модель обучалась/проверялась/тестировалась
+    :param features_: набор сторонних признаках, также подающихся на вход модели
+    :param layer_name: номер слоя, с которого снимаются карты активации
+    :param top_snp_per_image: количество пикселей с наибольшей интенсивностью, которые выбираются с каждого изображения
+    :param top_snp_overall: процент пикселей с наибольшей интенсивностью, которые выбираются как самые важные
+    :param draw_stat: индикатор необходимости построения частотной гистограммы признаков
+    :param color_bar: цвет гистограммы частот
+    :param title_: подпись графика
+    :param xlabel_: подпись оси абсцисс
+    :param ylabel_: подпись оси ординат
+    :param save_: индикатор необходимости сохранения статистической гистограммы после отрисовки
+    :param save_name: путь до файла, в который сохраняется частотная гистограмма (если необходимо)
+
+    :return: Список важных снипов с наибольшей частотой по всем изображениям + список уникальных признаков, которым
+     соответствуют выбранные пиксели
+    """
+
+    processed_rams = []
+    tf.compat.v1.disable_eager_execution()
+    for i in range(len(images_)):
+        batch_map = ram_metric(model_for_rams, layer_name, features_[i], images_[i])
+        processed_rams += list([batch_map])
+        print(f"RAM {i} from metric {ram_metric.__name__} for crop height finished")
+    tf.compat.v1.enable_eager_execution()
+    if draw_stat:
+        result = get_top_features(df_for_images, np.array(processed_images), top_snp_per_image, top_snp_overall,
+                                  draw=draw_stat, color=color_bar, title_=title_,
+                                  x_label=xlabel_, y_label=ylabel_,
+                                  save_name=save_name if save_ else "")
+    else:
+        result = get_top_features(df_for_images, np.array(processed_images), top_snp_per_image, top_snp_overall)
+    print("Top features for GradRAM metric, model crop height")
+    print(result[1])
+    return result
+
 
 model_crop_height = "checkpoints/model_checkpoints/model_saves/height_crop/grid_cv_trained_model_iter4.h5"
 model_crop_brown = "checkpoints/model_checkpoints/model_saves/crop_brown/grid_cv_trained_model_iter4.h5"
@@ -295,137 +343,73 @@ images = PlantImageContainer.load_images_from_folder(folder_images)[:n]
 pca_features_ = pca_features(images, n_components=5)  # По совету КН взять 5
 tsne = t_sne_features(images, n_components=2)  # по совету КН взять 2
 
-# plt.scatter(pca_features_[:, 1], pca_features_[:, 4], label='points')
-# plt.xlabel("PC1")
-# plt.ylabel("PC2")
-# plt.title("PCA")
-# plt.grid()
-# plt.show()
-# plt.cla()
-#
-# plt.scatter(tsne[:, 0], tsne[:, 1], label='points')
-# plt.xlabel("PC1")
-# plt.ylabel("PC2")
-# plt.title("t-SNE")
-# plt.grid()
-# plt.show()
-
 total_features = np.concatenate((pca_features_, tsne), axis=1)
 
 df_wheat = pd.read_csv("../datasets/wheat/wheat_pheno_num_sync.csv")
 df_gen = pd.read_csv("../datasets/wheat/markers_poly_filtered_sync.csv")
 
-# урожайность высота
-labels = df_wheat[["Урожайность.зерна..г.", "Высота.растений..см"]].to_numpy()[:n]
 data_images = images / 255.0
-data_vector = labels
-processed_images = []
-tf.compat.v1.disable_eager_execution()
-print(model_height.summary())
-for i in range(len(images)):
-    batch_maps = grad_ram_combo(model_height, "conv_deconv_1", total_features[i], images[i])
-    processed_images += list([batch_maps])
-    plt.imsave('gradram_combo.jpg', batch_maps)
-    processed_images += list([batch_maps])
-    print(f"GradRAM {i} for crop height finished")
-# tf.compat.v1.enable_eager_execution()
-metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 30, 0.01,
-                                                               draw=True, color="r", title_="",
-                                                               x_label="Номер SNP", y_label="Частота",
-                                                               save_name="../plots/feature_hist_crop_height_grad.png")
-print("Top features for GradRAM metric, model crop height")
-print(top_metric_features)
-exit(0)
+# урожайность высота
+metric_unique_features, top_metric_features = process_model_rams(model_for_rams=model_height, df_for_images=df_gen,
+                                                                 ram_metric=grad_ram_combo, images_=data_images,
+                                                                 features_=total_features, layer_name="conv_deconv_1",
+                                                                 top_snp_per_image=30, top_snp_overall=0.01,
+                                                                 draw_stat=True, color_bar="r",
+                                                                 title_="Частотная гистограмма снипов модели прогнозирования высоты и урожайности пшеницы метрикой GradRAM",
+                                                                 xlabel_="Номер SNP", ylabel_="Частота",
+                                                                 save_=True,
+                                                                 save_name="../plots/feature_hist_crop_height_grad.png")
 # урожайность бурая ржавчина
-# labels = df_wheat[["Урожайность.зерна..г.", "Бурая.ржавчина..."]].to_numpy()[:n]
-# data_images = images / 255.0
-# data_vector = labels
-# processed_images = []
-# # tf.compat.v1.disable_eager_execution()
-# for i in range(len(images)):
-#     batch_maps = grad_ram_combo(model_brown, "conv_deconv_1", total_features[i], images[i])
-#     processed_images += list([batch_maps])
-#     print(f"GradRAM {i} for crop brown rust finished")
-# # tf.compat.v1.enable_eager_execution()
-# metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 30, 0.01,
-#                                                                draw=True, color="r", title_="",
-#                                                                x_label="Название SNP", y_label="Частота",
-#                                                                save_name="../plots/feature_hist_crop_brown_grad.png")
-# print("Top features for GradrAM metric, model crop brown rust")
-# print(top_metric_features)
-#
-# # урожайность желтая ржавчина
-# labels = df_wheat[["Урожайность.зерна..г.", "Желтая.ржавчина..."]].to_numpy()[:n]
-# data_images = images / 255.0
-# data_vector = labels
-# processed_images = []
-# # tf.compat.v1.disable_eager_execution()
-# for i in range(len(images)):
-#     batch_maps = grad_ram_combo(model_yellow, "conv_deconv_1", total_features[i], images[i])
-#     processed_images += list([batch_maps])
-#     print(f"GradRAM {i} for crop yellow rust finished")
-# # tf.compat.v1.enable_eager_execution()
-# metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 30, 0.01,
-#                                                                draw=True, color="r", title_="",
-#                                                                x_label="Название SNP", y_label="Частота",
-#                                                                save_name="../plots/feature_hist_crop_yellow_grad.png")
-# print("Top features for GradRAM metric, model crop yellow rust")
-# print(top_metric_features)
+metric_unique_features, top_metric_features = process_model_rams(model_for_rams=model_brown, df_for_images=df_gen,
+                                                                 ram_metric=grad_ram_combo, images_=data_images,
+                                                                 features_=total_features, layer_name="conv_deconv_1",
+                                                                 top_snp_per_image=30, top_snp_overall=0.01,
+                                                                 draw_stat=True, color_bar="r",
+                                                                 title_="Частотная гистограмма снипов модели прогнозирования высоты и бурой ржавчины пшеницы метрикой GradRAM",
+                                                                 xlabel_="Номер SNP", ylabel_="Частота",
+                                                                 save_=True,
+                                                                 save_name="../plots/feature_hist_crop_brown_grad.png")
+# урожайность желтая ржавчина
+metric_unique_features, top_metric_features = process_model_rams(model_for_rams=model_yellow, df_for_images=df_gen,
+                                                                 ram_metric=grad_ram_combo, images_=data_images,
+                                                                 features_=total_features, layer_name="conv_deconv_1",
+                                                                 top_snp_per_image=30, top_snp_overall=0.01,
+                                                                 draw_stat=True, color_bar="r",
+                                                                 title_="Частотная гистограмма снипов модели прогнозирования высоты и желтой ржавчины пшеницы метрикой GradRAM",
+                                                                 xlabel_="Номер SNP", ylabel_="Частота",
+                                                                 save_=True,
+                                                                 save_name="../plots/feature_hist_crop_yellow_grad.png")
 
 # дальше посчитаем те же таблицы, но при помощи ScoreRAM
 # урожайность высота
-labels = df_wheat[["Урожайность.зерна..г.", "Высота.растений..см"]].to_numpy()[n]
-data_images = images / 255.0
-data_vector = labels
-processed_images = []
-tf.compat.v1.disable_eager_execution()
-print(model_height.summary())
-for i in range(len(images)):
-    batch_maps = score_ram_combo(model_height, "conv_deconv_1", total_features[i], images[i])
-    plt.imshow(batch_maps)
-    plt.imsave('scoreram_combo.jpg', batch_maps)
-    processed_images += list([batch_maps])
-    print(f"ScoreRAM {i} for crop height finished")
-# tf.compat.v1.enable_eager_execution()
-metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 30, 0.01,
-                                                               draw=True, color="r", title_="",
-                                                               x_label="Название SNP", y_label="Частота",
-                                                               save_name="../plots/feature_hist_crop_height_score.png")
-print("Top features for ScoreRAM metric, model crop height")
-print(top_metric_features)
+metric_unique_features, top_metric_features = process_model_rams(model_for_rams=model_height, df_for_images=df_gen,
+                                                                 ram_metric=score_ram_combo, images_=data_images,
+                                                                 features_=total_features, layer_name="conv_deconv_1",
+                                                                 top_snp_per_image=30, top_snp_overall=0.01,
+                                                                 draw_stat=True, color_bar="r",
+                                                                 title_="Частотная гистограмма снипов модели прогнозирования высоты и урожайности пшеницы метрикой ScoreRAM",
+                                                                 xlabel_="Номер SNP", ylabel_="Частота",
+                                                                 save_=True,
+                                                                 save_name="../plots/feature_hist_crop_height_score.png")
 
 # урожайность бурая ржавчина
-labels = df_wheat[["Урожайность.зерна..г.", "Бурая.ржавчина..."]].to_numpy()[:n]
-data_images = images / 255.0
-data_vector = labels
-processed_images = []
-# tf.compat.v1.disable_eager_execution()
-for i in range(len(images)):
-    batch_maps = score_ram_combo(model_brown, "conv_deconv_1", total_features[i], images[i])
-    processed_images += list([batch_maps])
-    print(f"ScoreRAM {i} for crop brown rust finished")
-# tf.compat.v1.enable_eager_execution()
-metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 30, 0.01,
-                                                               draw=True, color="r", title_="",
-                                                               x_label="Название SNP", y_label="Частота",
-                                                               save_name="../plots/feature_hist_crop_brown_score.png")
-print("Top features for ScoreRAM metric, model crop brown rust")
-print(top_metric_features)
+metric_unique_features, top_metric_features = process_model_rams(model_for_rams=model_brown, df_for_images=df_gen,
+                                                                 ram_metric=score_ram_combo, images_=data_images,
+                                                                 features_=total_features, layer_name="conv_deconv_1",
+                                                                 top_snp_per_image=30, top_snp_overall=0.01,
+                                                                 draw_stat=True, color_bar="r",
+                                                                 title_="Частотная гистограмма снипов модели прогнозирования высоты и бурой ржавчины пшеницы метрикой ScoreRAM",
+                                                                 xlabel_="Номер SNP", ylabel_="Частота",
+                                                                 save_=True,
+                                                                 save_name="../plots/feature_hist_crop_brown_score.png")
 
 # урожайность желтая ржавчина
-labels = df_wheat[["Урожайность.зерна..г.", "Желтая.ржавчина..."]].to_numpy()[:n]
-data_images = images / 255.0
-data_vector = labels
-processed_images = []
-# tf.compat.v1.disable_eager_execution()
-for i in range(len(images)):
-    batch_maps = score_ram_combo(model_yellow, "conv_deconv_1", total_features[i], images[i])
-    processed_images += list([batch_maps])
-    print(f"ScoreRAM {i} for crop yellow rust finished")
-# tf.compat.v1.enable_eager_execution()
-metric_unique_features, top_metric_features = get_top_features(df_gen, np.array(processed_images), 30, 0.01,
-                                                               draw=True, color="r", title_="",
-                                                               x_label="Название SNP", y_label="Частота",
-                                                               save_name="../plots/feature_hist_crop_yellow_score.png")
-print("Top features for ScoreRAM metric, model crop yellow rust")
-print(top_metric_features)
+metric_unique_features, top_metric_features = process_model_rams(model_for_rams=model_yellow, df_for_images=df_gen,
+                                                                 ram_metric=score_ram_combo, images_=data_images,
+                                                                 features_=total_features, layer_name="conv_deconv_1",
+                                                                 top_snp_per_image=30, top_snp_overall=0.01,
+                                                                 draw_stat=True, color_bar="r",
+                                                                 title_="Частотная гистограмма снипов модели прогнозирования высоты и желтой ржавчины пшеницы метрикой ScoreRAM",
+                                                                 xlabel_="Номер SNP", ylabel_="Частота",
+                                                                 save_=True,
+                                                                 save_name="../plots/feature_hist_crop_yellow_score.png")
